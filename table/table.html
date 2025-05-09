@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<head>
+  <title>Poker Table</title>
+  <link rel="stylesheet" type="text/css" href="styles.css" />
+</head>
+<body>
+  <h1>Poker Table</h1>
+  <label>
+    <input type="checkbox" id="physicalDeckToggle" onchange="toggleDeckMode()">
+    Use Physical Deck
+  </label>
+
+  <div id="buttonRow">
+    <button onclick="createGame()">Generate Game Code</button>
+    <button onclick="startGame()">Start Game</button>
+    <a id="joinLink" href="/player.html">
+      <button>Join as Player</button>
+    </a>
+  </div>
+
+  <div id="gameCode"></div>
+
+  <div id="tableContainer">
+    <div id="seat-top-left" class="player-seat"></div>
+    <div id="seat-top-right" class="player-seat"></div>
+    <div id="seat-bottom-left" class="player-seat"></div>
+    <div id="seat-bottom-right" class="player-seat"></div>
+    <div id="table"></div>
+    <div id="tableedge"></div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
