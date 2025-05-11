@@ -60,9 +60,18 @@ io.on("connection", (socket) => {
 
   socket.on("table_rejoin_game", (code, callback) => {
     const game = games[code];
+    for (const [gameCode, gameObj] of Object.entries(games)) {
+      if (gameCode != code) {
+        if (!gameObj.players || gameObj.players.length === 0) {
+          console.log(`Cleaning up empty game: ${gameCode}`);
+          delete games[gameCode];
+        }
+      }
+    }
+
     if (!game) {
       console.log("failed");
-      return callback({ success: false, message: "Game not found" });
+      return callback({ success: false, message: `${code} Game not found` });
     }
 
     socket.join(code);
@@ -89,7 +98,11 @@ io.on("connection", (socket) => {
 
   socket.on("create_game", (callback) => {
     const code = Math.random().toString(36).substring(2, 7).toUpperCase();
-    games[code] = { players: [], state: { currentTurnIndex: 0 } };
+    games[code] = {
+      players: [],
+      deck: [],
+      state: { pot: 0, currentTurnIndex: 0, community_card: [] },
+    };
     console.log("All current games:", Object.keys(games));
     socket.join(code);
     callback(code);

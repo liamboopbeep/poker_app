@@ -14,9 +14,14 @@ window.addEventListener("load", () => {
   if (code) {
     socket.emit("table_rejoin_game", code, (response) => {
       if (response.success) {
+        alert(response.message);
         socket.emit("players_update_request", code, response);
         document.getElementById("gameCode").innerText = "Game Code: " + code;
         document.getElementById("joinLink").href = `/player.html?code=${code}`;
+      } else {
+        document.getElementById("gameCode").innerText = "Game Code: " + code;
+        document.getElementById("joinLink").href = `/player.html?code=${code}`;
+        alert(response.message);
       }
     });
   }
