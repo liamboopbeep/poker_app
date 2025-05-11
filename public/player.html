@@ -1,25 +1,26 @@
 <!DOCTYPE html>
 <html>
-<head><title>Player</title></head>
-<link rel="stylesheet" type="text/css" href="styles.css" />
-<body>
-  <input id="code" placeholder="Enter Game Code">
-  <input id="name" placeholder="Your Name">
-  <button onclick="join()">Join Game</button>
+  <head>
+    <title>Player</title>
+  </head>
+  <link rel="stylesheet" type="text/css" href="playerstyles.css" />
+  <body>
+    <input id="code" placeholder="Enter Game Code" />
+    <input id="name" placeholder="Your Name" />
+    <button onclick="join()">Join Game</button>
 
-  <div id="actions" style="display:none;">
-    <button onclick="sendAction('fold')">Fold</button>
-    <button onclick="sendAction('check')">Check</button>
-    <button onclick="sendAction('bet')">Bet</button>
-  </div>
+    <div id="actions" style="display: none">
+      <button onclick="sendAction('fold')">Fold</button>
+      <button onclick="sendAction('check')">Check</button>
+      <button onclick="sendAction('bet')">Bet</button>
+    </div>
 
-  <div id="handBox" style="margin-top:20px; display:none;">
-    <h3>Your Hand:</h3>
-    <div id="handDisplay" style="font-size: 24px;"></div>
-  </div>
+    <div id="handBox" style="margin-top: 20px; display: none">
+      <h3>Your Hand:</h3>
+      <div id="handDisplay" style="font-size: 24px"></div>
+    </div>
 
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="script.js"></script>
-
-</body>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="playerscript.js"></script>
+  </body>
 </html>
