@@ -38,6 +38,7 @@ function createGame() {
       const seatDiv = document.getElementById(id);
       seatDiv.textContent = "";
       seatDiv.style.color = "white";
+      seatDiv.style.backgroundColor = "green";
     });
   });
 }
