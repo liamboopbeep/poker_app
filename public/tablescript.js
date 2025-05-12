@@ -15,7 +15,7 @@ window.addEventListener("load", () => {
     socket.emit("table_rejoin_game", code, (response) => {
       if (response.success) {
         alert(response.message);
-        socket.emit("players_update_request", code, response);
+        socket.emit("players_update_request", code);
         document.getElementById("gameCode").innerText = "Game Code: " + code;
         document.getElementById("joinLink").href = `/player.html?code=${code}`;
       } else {
@@ -37,33 +37,22 @@ function createGame() {
   });
 }
 
-function toggleDeckMode() {
-  const usePhysical = document.getElementById("physicalDeckToggle").checked;
-  document.getElementById("dealBtn").style.display = usePhysical
-    ? "none"
-    : "inline-block";
-}
-
 function startGame() {
   if (currentGameCode) {
     socket.emit("start_game", currentGameCode);
   }
 }
 
-socket.on("players_update", (players) => {
+socket.on("players_update", (players, callback) => {
   seatIds.forEach((id, index) => {
     const seatDiv = document.getElementById(id);
     const player = players[index];
     seatDiv.textContent = player ? player.name : "";
-    seatDiv.style.color = "white";
-  });
-});
-
-socket.on("turn_update", (activeId, players) => {
-  seatIds.forEach((id, index) => {
-    const seatDiv = document.getElementById(id);
-    const player = players[index];
-    seatDiv.textContent = player ? player.name : "";
-    seatDiv.style.color = player && player.isTurn ? "red" : "white";
+    if (player && player.isTurn) {
+      seatDiv.style.backgroundColor = "red";
+    } else {
+      seatDiv.style.backgroundColor = "green";
+    }
+    callback({ success: true, message: `table player update` });
   });
 });

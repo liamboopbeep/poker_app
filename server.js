@@ -76,6 +76,8 @@ io.on("connection", (socket) => {
 
     socket.join(code);
     console.log("nailed");
+    io.to(code).emit("players_update", game.players, response);
+    console.log(response);
     callback({ success: true, message: "Rejoined successfully" });
   });
 
@@ -92,7 +94,7 @@ io.on("connection", (socket) => {
     }
 
     socket.join(code);
-    io.to(code).emit("players_update", game.players);
+    io.to(code).emit("players_update", game.players, response);
     callback({ success: true, message: "Rejoined successfully" });
   });
 
@@ -101,7 +103,7 @@ io.on("connection", (socket) => {
     games[code] = {
       players: [],
       deck: [],
-      state: { pot: 0, currentTurnIndex: 0, community_card: [] },
+      state: { pot: 0, community_card: [] },
     };
     console.log("All current games:", Object.keys(games));
     socket.join(code);
@@ -113,7 +115,7 @@ io.on("connection", (socket) => {
     if (!game) {
       return callback({ success: false, message: "Game not found" });
     }
-    io.to(code).emit("players_update", game.players);
+    io.to(code).emit("players_update", game.players, response);
   });
 
   socket.on("join_game", (code, name, callback) => {
@@ -142,6 +144,7 @@ io.on("connection", (socket) => {
       name,
       hand: [], // e.g., ['Ah', 'Ks']
       balance: 1000, // default starting chips
+      isTurn: false,
       folded: false, // for round tracking
     });
     socket.join(code);
@@ -152,11 +155,11 @@ io.on("connection", (socket) => {
   socket.on("start_game", (code) => {
     const game = games[code];
     if (game && game.players.length >= 2) {
-      dealHands(game);
-      game.state.currentTurnIndex = 0;
-      const currentPlayer = game.players[game.state.currentTurnIndex];
-      io.to(code).emit("turn_update", currentPlayer.id, game.players);
-      console.log(players);
+      //dealHands(game);
+      const currentPlayer = game.players[0];
+      currentPlayer.isTurn = true;
+      io.to(code).emit("players_update", game.players);
+      console.log(game.players);
     }
   });
 
@@ -169,8 +172,9 @@ io.on("connection", (socket) => {
         io.to(code).emit("players_update", game.players);
         break;
       }
+      console.log(Object.entries(game.players));
     }
-  });
+  }); // add handle turn after dc
 
   socket.on("player_action", ({ code, action }) => {
     const game = games[code];
