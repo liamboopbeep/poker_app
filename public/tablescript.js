@@ -34,6 +34,11 @@ function createGame() {
     currentGameCode = code;
     const newUrl = `${window.location.pathname}?code=${code}`;
     window.history.pushState({}, "", newUrl);
+    seatIds.forEach((id) => {
+      const seatDiv = document.getElementById(id);
+      seatDiv.textContent = "";
+      seatDiv.style.color = "white";
+    });
   });
 }
 
@@ -53,6 +58,5 @@ socket.on("players_update", (players, callback) => {
     } else {
       seatDiv.style.backgroundColor = "green";
     }
-    callback({ success: true, message: `table player update` });
   });
 });

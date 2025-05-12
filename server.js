@@ -76,8 +76,7 @@ io.on("connection", (socket) => {
 
     socket.join(code);
     console.log("nailed");
-    io.to(code).emit("players_update", game.players, response);
-    console.log(response);
+    io.to(code).emit("players_update", game.players);
     callback({ success: true, message: "Rejoined successfully" });
   });
 
@@ -148,6 +147,7 @@ io.on("connection", (socket) => {
       folded: false, // for round tracking
     });
     socket.join(code);
+    console.log(game.players);
     io.to(code).emit("players_update", game.players);
     callback({ success: true });
   });
