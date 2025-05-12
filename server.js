@@ -138,16 +138,20 @@ io.on("connection", (socket) => {
       return callback({ success: false, message: "Name already taken" });
     }
 
-    game.players.push({
+    const newPlayer = {
       id: socket.id,
       name,
-      hand: [], // e.g., ['Ah', 'Ks']
-      balance: 1000, // default starting chips
+      hand: [],
+      balance: 1000,
       isTurn: false,
-      folded: false, // for round tracking
-    });
+      folded: false,
+    };
+
+    game.players.push(newPlayer);
     socket.join(code);
-    console.log(game.players);
+
+    console.log(`Player joined: ${name} (ID: ${socket.id})`);
+
     io.to(code).emit("players_update", game.players);
     callback({ success: true });
   });
@@ -155,11 +159,11 @@ io.on("connection", (socket) => {
   socket.on("start_game", (code) => {
     const game = games[code];
     if (game && game.players.length >= 2) {
+      console.log("game start!");
       //dealHands(game);
       const currentPlayer = game.players[0];
       currentPlayer.isTurn = true;
       io.to(code).emit("players_update", game.players);
-      console.log(game.players);
     }
   });
 
@@ -180,29 +184,64 @@ io.on("connection", (socket) => {
     const game = games[code];
     if (!game) return;
 
-    const currentPlayer = game.players[game.state.currentTurnIndex];
-    if (socket.id !== currentPlayer.id) {
+    const currentPlayer = game.players.find((p) => p.isTurn);
+    if (!currentPlayer || socket.id !== currentPlayer.id) {
       socket.emit("error_message", "Not your turn!");
       return;
     }
 
-    // Broadcast action
+    // Clear current turn and broadcast action
+    currentPlayer.isTurn = false;
     io.to(code).emit("action_taken", { id: socket.id, action });
 
-    // Advance turn
-    let nextIndex = game.state.currentTurnIndex;
+    // Get index of current player
+    let nextIndex = game.players.indexOf(currentPlayer);
     const totalPlayers = game.players.length;
 
+    // Find next player who has not folded
     do {
       nextIndex = (nextIndex + 1) % totalPlayers;
     } while (
       game.players[nextIndex].folded &&
-      nextIndex !== game.state.currentTurnIndex
+      nextIndex !== game.players.indexOf(currentPlayer)
     );
 
-    game.state.currentTurnIndex = nextIndex;
+    // Update turn
+    // game.players.forEach(p => p.isTurn = false);
     const nextPlayer = game.players[nextIndex];
-    io.to(code).emit("turn_update", nextPlayer.id, game.players);
+    nextPlayer.isTurn = true;
+
+    io.to(code).emit("playes_update", game.players);
+  });
+
+  socket.on("player_fold", (code) => {
+    const game = games[code];
+    if (!game) return;
+
+    const currentPlayer = game.players.find((p) => p.isTurn);
+
+    // Clear current turn and broadcast action
+    currentPlayer.isTurn = false;
+    currentPlayer.folded = true;
+
+    // get index of current player
+    let nextIndex = game.players.indexOf(currentPlayer);
+    const totalPlayers = game.players.length;
+
+    // find next player who not folded
+    do {
+      nextIndex = (nextIndex + 1) % totalPlayers;
+    } while (
+      game.players[nextIndex].folded &&
+      nextIndex !== game.players.indexOf(currentPlayer)
+    );
+
+    // Update turn
+    // game.players.forEach(p => p.isTurn = false);
+    const nextPlayer = game.players[nextIndex];
+    nextPlayer.isTurn = true;
+
+    io.to(code).emit("players_update", game.players);
   });
 });
 

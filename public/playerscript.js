@@ -34,19 +34,11 @@ socket.on("players_update", (players) => {
   const me = players.find((player) => player.id === socket.id);
   const isMyTurn = me && me.isTurn;
 
-  console.log("My ID:", socket.id);
-  console.log("Players:", players);
-  console.log("Is it my turn?", isMyTurn);
-
   const actionsEl = document.getElementById("actions");
-  if (actionsEl) {
-    actionsEl.style.display = isMyTurn ? "block" : "none";
-  } else {
-    console.warn("No #actions element found in DOM");
-  }
+  actionsEl.style.display = isMyTurn ? "block" : "none";
 });
 
-function sendAction(action) {
+function sendFold() {
   const code = document.getElementById("code").value.toUpperCase();
-  socket.emit("player_action", { code, action });
+  socket.emit("player_fold", code);
 }

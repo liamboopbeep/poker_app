@@ -49,15 +49,20 @@ function startGame() {
   }
 }
 
-socket.on("players_update", (players, callback) => {
+socket.on("players_update", (players) => {
+  console.log(players);
   seatIds.forEach((id, index) => {
     const seatDiv = document.getElementById(id);
     const player = players[index];
-    seatDiv.textContent = player ? player.name : "";
-    if (player && player.isTurn) {
-      seatDiv.style.backgroundColor = "red";
+
+    if (player) {
+      seatDiv.textContent = player.name;
+      seatDiv.style.backgroundColor = player.isTurn ? "red" : "#1e5631";
+      seatDiv.style.opacity = player.folded ? "0.4" : "1";
     } else {
-      seatDiv.style.backgroundColor = "green";
+      seatDiv.textContent = "";
+      seatDiv.style.backgroundColor = "#1e5631";
+      seatDiv.style.opacity = "1";
     }
   });
 });
