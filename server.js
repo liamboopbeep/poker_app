@@ -51,7 +51,7 @@ function dealHands(game) {
     io.to(player.id).emit("your_hand", player.hand); // send hand privately
   }
 }
-
+const mininalbet = 2;
 let games = {}; // sessionCode => { players: [...], state: {...} }
 
 io.on("connection", (socket) => {
@@ -102,7 +102,7 @@ io.on("connection", (socket) => {
     games[code] = {
       players: [],
       deck: [],
-      state: { pot: 0, community_card: [] },
+      state: { pot: 0, highestbet: 0, community_card: [] },
     };
     console.log("All current games:", Object.keys(games));
     socket.join(code);
@@ -143,6 +143,9 @@ io.on("connection", (socket) => {
       name,
       hand: [],
       balance: 1000,
+      isDealer: false,
+      isSmallBlind: false,
+      isBigBlind: false,
       isTurn: false,
       folded: false,
     };
@@ -160,9 +163,42 @@ io.on("connection", (socket) => {
     const game = games[code];
     if (game && game.players.length >= 2) {
       console.log("game start!");
-      //dealHands(game);
-      const currentPlayer = game.players[0];
-      currentPlayer.isTurn = true;
+
+      // Clear previous roles
+      game.players.forEach((p) => {
+        p.isDealer = false;
+        p.isSmallBlind = false;
+        p.isBigBlind = false;
+        p.isTurn = false;
+        p.folded = false;
+      });
+
+      const totalPlayers = game.players.length;
+
+      // Assign Dealer
+      const dealerIndex = 0;
+      const dealer = game.players[dealerIndex];
+      dealer.isDealer = true;
+
+      if (totalPlayers === 2) {
+        //headsup
+        dealer.isSmallBlind = true;
+        dealer.isTurn = false;
+
+        const bigBlindIndex = (dealerIndex + 1) % totalPlayers;
+        const bigBlind = game.players[bigBlindIndex];
+        bigBlind.isBigBlind = true;
+        bigBlind.isTurn = true;
+      } else {
+        const smallBlindIndex = (dealerIndex + 1) % totalPlayers;
+        const bigBlindIndex = (dealerIndex + 2) % totalPlayers;
+        const firstToActIndex = (dealerIndex + 3) % totalPlayers;
+
+        game.players[smallBlindIndex].isSmallBlind = true;
+        game.players[bigBlindIndex].isBigBlind = true;
+        game.players[firstToActIndex].isTurn = true;
+      }
+
       io.to(code).emit("players_update", game.players);
     }
   });
@@ -180,25 +216,21 @@ io.on("connection", (socket) => {
     }
   }); // add handle turn after dc
 
-  socket.on("player_action", ({ code, action }) => {
+  socket.on("player_callandcheck", (code) => {
     const game = games[code];
     if (!game) return;
 
     const currentPlayer = game.players.find((p) => p.isTurn);
-    if (!currentPlayer || socket.id !== currentPlayer.id) {
-      socket.emit("error_message", "Not your turn!");
-      return;
-    }
 
     // Clear current turn and broadcast action
     currentPlayer.isTurn = false;
-    io.to(code).emit("action_taken", { id: socket.id, action });
+    currentPlayer.folded = true;
 
-    // Get index of current player
+    // get index of current player
     let nextIndex = game.players.indexOf(currentPlayer);
     const totalPlayers = game.players.length;
 
-    // Find next player who has not folded
+    // find next player who not folded
     do {
       nextIndex = (nextIndex + 1) % totalPlayers;
     } while (
@@ -211,7 +243,7 @@ io.on("connection", (socket) => {
     const nextPlayer = game.players[nextIndex];
     nextPlayer.isTurn = true;
 
-    io.to(code).emit("playes_update", game.players);
+    io.to(code).emit("players_update", game.players);
   });
 
   socket.on("player_fold", (code) => {

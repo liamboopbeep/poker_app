@@ -42,3 +42,8 @@ function sendFold() {
   const code = document.getElementById("code").value.toUpperCase();
   socket.emit("player_fold", code);
 }
+
+function sendcallandcheck() {
+  const code = document.getElementById("code").value.toUpperCase();
+  socket.emit("player_callandcheck", code);
+}
