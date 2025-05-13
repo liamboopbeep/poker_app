@@ -1,10 +1,5 @@
 const socket = io();
-const seatIds = [
-  "seat-top-left",
-  "seat-top-right",
-  "seat-bottom-left",
-  "seat-bottom-right",
-];
+const seatIds = ["seat-top-left", "seat-top-right", "seat-bottom-left", "seat-bottom-right"];
 
 let currentGameCode = null;
 
@@ -36,10 +31,17 @@ function createGame() {
     window.history.pushState({}, "", newUrl);
     seatIds.forEach((id) => {
       const seatDiv = document.getElementById(id);
-      seatDiv.textContent = "";
+
+      const playerNameDiv = seatDiv.querySelector(".player-name");
+      if (playerNameDiv) playerNameDiv.textContent = "";
+
       seatDiv.style.color = "white";
       seatDiv.style.backgroundColor = "1e5631";
       seatDiv.style.opacity = "1";
+
+      seatDiv.querySelectorAll(".badge").forEach((badge) => {
+        badge.hidden = true;
+      });
     });
   });
 }
@@ -52,18 +54,36 @@ function startGame() {
 
 socket.on("players_update", (players) => {
   console.log(players);
+
   seatIds.forEach((id, index) => {
     const seatDiv = document.getElementById(id);
     const player = players[index];
 
+    const playerNameDiv = seatDiv.querySelector(".player-name");
+
+    const dealerBadge = seatDiv.querySelector(".dealer");
+    const sbBadge = seatDiv.querySelector(".small-blind");
+    const bbBadge = seatDiv.querySelector(".big-blind");
+
     if (player) {
-      seatDiv.textContent = player.name;
+      if (playerNameDiv) playerNameDiv.textContent = player.name;
       seatDiv.style.backgroundColor = player.isTurn ? "red" : "#1e5631";
       seatDiv.style.opacity = player.folded ? "0.4" : "1";
+
+      // Update badges visibility
+      dealerBadge.hidden = !player.isDealer;
+      sbBadge.hidden = !player.isSmallBlind;
+      bbBadge.hidden = !player.isBigBlind;
     } else {
-      seatDiv.textContent = "";
+      // Reset seat
+      if (playerNameDiv) playerNameDiv.textContent = "";
       seatDiv.style.backgroundColor = "#1e5631";
       seatDiv.style.opacity = "1";
+
+      // Hide all badges
+      dealerBadge.hidden = true;
+      sbBadge.hidden = true;
+      bbBadge.hidden = true;
     }
   });
 });
