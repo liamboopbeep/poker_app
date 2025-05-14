@@ -10,21 +10,7 @@ app.use(express.static("public"));
 
 function createShuffledDeck() {
   const suits = ["♠", "♥", "♦", "♣"];
-  const ranks = [
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-    "10",
-    "J",
-    "Q",
-    "K",
-    "A",
-  ];
+  const ranks = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
   let deck = [];
 
   for (let suit of suits) {
@@ -51,7 +37,28 @@ function dealHands(game) {
     io.to(player.id).emit("your_hand", player.hand); // send hand privately
   }
 }
-const mininalbet = 2;
+
+function send_bet(code, player, bet) {
+  const game = games[code];
+  if (!game || !player || bet <= 0 || player.folded || player.balance < bet) return;
+
+  // Deduct the bet from player
+  player.balance -= bet;
+
+  // Add to the pot
+  game.state.pot += bet;
+
+  // Update highest bet if needed
+  if (bet > game.state.highestbet) {
+    game.state.highestbet = bet;
+  }
+
+  // Update players info
+  io.to(code).emit("players_update", game.players);
+}
+
+const minimalbet = 2;
+
 let games = {}; // sessionCode => { players: [...], state: {...} }
 
 io.on("connection", (socket) => {
@@ -130,9 +137,7 @@ io.on("connection", (socket) => {
       });
     }
 
-    const nameExists = game.players.some(
-      (player) => player.name.toLowerCase() === name.toLowerCase()
-    );
+    const nameExists = game.players.some((player) => player.name.toLowerCase() === name.toLowerCase());
 
     if (nameExists) {
       return callback({ success: false, message: "Name already taken" });
@@ -183,12 +188,15 @@ io.on("connection", (socket) => {
       if (totalPlayers === 2) {
         //headsup
         dealer.isSmallBlind = true;
-        dealer.isTurn = false;
+        dealer.isTurn = true;
 
         const bigBlindIndex = (dealerIndex + 1) % totalPlayers;
         const bigBlind = game.players[bigBlindIndex];
         bigBlind.isBigBlind = true;
-        bigBlind.isTurn = true;
+        bigBlind.isTurn = false;
+
+        send_bet(code, game.players[dealerIndex], minimalbet / 2); // Small blind
+        send_bet(code, game.players[bigBlindIndex], minimalbet); // Big blind
       } else {
         const smallBlindIndex = (dealerIndex + 1) % totalPlayers;
         const bigBlindIndex = (dealerIndex + 2) % totalPlayers;
@@ -197,6 +205,9 @@ io.on("connection", (socket) => {
         game.players[smallBlindIndex].isSmallBlind = true;
         game.players[bigBlindIndex].isBigBlind = true;
         game.players[firstToActIndex].isTurn = true;
+
+        send_bet(code, game.players[smallBlindIndex], minimalbet / 2); // Small blind
+        send_bet(code, game.players[bigBlindIndex], minimalbet); // Big blind
       }
 
       io.to(code).emit("players_update", game.players);
@@ -233,10 +244,7 @@ io.on("connection", (socket) => {
     // find next player who not folded
     do {
       nextIndex = (nextIndex + 1) % totalPlayers;
-    } while (
-      game.players[nextIndex].folded &&
-      nextIndex !== game.players.indexOf(currentPlayer)
-    );
+    } while (game.players[nextIndex].folded && nextIndex !== game.players.indexOf(currentPlayer));
 
     // Update turn
     // game.players.forEach(p => p.isTurn = false);
@@ -263,10 +271,7 @@ io.on("connection", (socket) => {
     // find next player who not folded
     do {
       nextIndex = (nextIndex + 1) % totalPlayers;
-    } while (
-      game.players[nextIndex].folded &&
-      nextIndex !== game.players.indexOf(currentPlayer)
-    );
+    } while (game.players[nextIndex].folded && nextIndex !== game.players.indexOf(currentPlayer));
 
     // Update turn
     // game.players.forEach(p => p.isTurn = false);
@@ -275,8 +280,11 @@ io.on("connection", (socket) => {
 
     io.to(code).emit("players_update", game.players);
   });
+
+  socket.on("player_bet", ({ code, bet }) => {
+    const game = games[code];
+    if (!game) return;
+  });
 });
 
-server.listen(3000, () =>
-  console.log("Server running on http://localhost:3000")
-);
+server.listen(3000, () => console.log("Server running on http://localhost:3000"));

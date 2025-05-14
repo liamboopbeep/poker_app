@@ -13,9 +13,7 @@ function join() {
 
   if (name) {
     socket.emit("join_game", code, name, (response) => {
-      if (response.success) {
-        document.getElementById("actions").style.display = "block";
-      } else {
+      if (!response.success) {
         alert(response.message);
       }
     });
@@ -35,12 +33,31 @@ socket.on("players_update", (players) => {
   const isMyTurn = me && me.isTurn;
 
   const actionsEl = document.getElementById("actions");
-  actionsEl.style.display = isMyTurn ? "block" : "none";
+  actionsEl.style.display = me ? "block" : "none";
+  actionsEl.style.opacity = isMyTurn ? "1.0" : "0.4";
+
+  const buttons = actionsEl.querySelectorAll("button");
+  buttons.forEach((btn) => {
+    btn.disabled = !isMyTurn;
+  });
+
+  if (me) {
+    document.querySelector("#playerInfo .player-name").textContent = me.name;
+    document.querySelector("#playerInfo .balance").textContent = `Balance: $${me.balance}`;
+    document.querySelector("#playerInfo .dealer").hidden = !me.isDealer;
+    document.querySelector("#playerInfo .small-blind").hidden = !me.isSmallBlind;
+    document.querySelector("#playerInfo .big-blind").hidden = !me.isBigBlind;
+  }
 });
 
 function sendFold() {
   const code = document.getElementById("code").value.toUpperCase();
   socket.emit("player_fold", code);
+}
+
+function sendbet(bet) {
+  const code = document.getElementById("code").value.toUpperCase();
+  socket.emit("player_bet", { code, bet });
 }
 
 function sendcallandcheck() {

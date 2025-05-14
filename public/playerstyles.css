@@ -1,0 +1,132 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: #121212;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.container {
+  text-align: center;
+}
+
+.join-box input {
+  padding: 10px;
+  margin: 10px;
+  font-size: 16px;
+  border-radius: 5px;
+  border: none;
+}
+
+.join-box button {
+  padding: 12px 24px;
+  font-size: 18px;
+  background-color: #00b894;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.join-box button:hover {
+  background-color: #019875;
+}
+
+.action-buttons {
+  margin-top: 30px;
+}
+
+.action-buttons button {
+  font-size: 24px;
+  padding: 15px 30px;
+  margin: 10px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: bold;
+  color: white;
+}
+
+button.fold {
+  background-color: #d63031;
+}
+
+button.check {
+  background-color: #0984e3;
+}
+
+button.bet {
+  background-color: #00cec9;
+}
+
+button.fold:hover {
+  background-color: #c0392b;
+}
+
+button.check:hover {
+  background-color: #0077cc;
+}
+
+button.bet:hover {
+  background-color: #00b3b3;
+}
+
+.hand-box {
+  margin-top: 30px;
+}
+
+#handDisplay {
+  font-size: 28px;
+  margin-top: 10px;
+}
+
+#playerInfo {
+  background-color: #2a2a2a;
+  color: white;
+  padding: 15px;
+  margin-top: 30px;
+  border-radius: 10px;
+  width: 240px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  position: relative;
+}
+
+#playerInfo .player-name {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+#playerInfo .balance {
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+.badge {
+  background-color: #ffd700;
+  color: #000;
+  padding: 5px;
+  border-radius: 5px;
+  position: absolute;
+  font-weight: bold;
+}
+
+.badge.dealer {
+  top: 10px;
+  left: 10px;
+}
+
+.badge.small-blind {
+  top: 10px;
+  right: 10px;
+}
+
+.badge.big-blind {
+  bottom: 10px;
+  left: 10px;
+}

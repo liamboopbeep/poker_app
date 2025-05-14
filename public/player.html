@@ -2,22 +2,34 @@
 <html>
   <head>
     <title>Player</title>
+    <link rel="stylesheet" type="text/css" href="playerstyles.css" />
   </head>
-  <link rel="stylesheet" type="text/css" href="playerstyles.css" />
   <body>
-    <input id="code" placeholder="Enter Game Code" />
-    <input id="name" placeholder="Your Name" />
-    <button onclick="join()">Join Game</button>
+    <div class="container">
+      <div class="join-box">
+        <input id="code" placeholder="Enter Game Code" />
+        <input id="name" placeholder="Your Name" />
+        <button onclick="join()">Join Game</button>
+      </div>
 
-    <div id="actions" style="display: none">
-      <button onclick="sendFold('fold')">Fold</button>
-      <button onclick="sendAction('check')">Check</button>
-      <button onclick="sendAction('bet')">Bet</button>
-    </div>
+      <div id="actions" class="action-buttons" style="display: none">
+        <button onclick="sendFold('fold')" class="fold">Fold</button>
+        <button onclick="sendAction('check')" class="check">Check</button>
+        <button onclick="sendAction('bet')" class="bet">Bet</button>
+      </div>
 
-    <div id="handBox" style="margin-top: 20px; display: none">
-      <h3>Your Hand:</h3>
-      <div id="handDisplay" style="font-size: 24px"></div>
+      <div id="handBox" class="hand-box" style="display: none">
+        <h3>Your Hand:</h3>
+        <div id="handDisplay"></div>
+      </div>
+
+      <div id="playerInfo">
+        <div class="player-name"></div>
+        <div class="balance"></div>
+        <div class="badge dealer" hidden>D</div>
+        <div class="badge small-blind" hidden>SB</div>
+        <div class="badge big-blind" hidden>BB</div>
+      </div>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
