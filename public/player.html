@@ -14,8 +14,13 @@
 
       <div id="actions" class="action-buttons" style="display: none">
         <button onclick="sendFold()" class="fold">Fold</button>
-        <button onclick="sendAction('bet')" class="raise">Raise</button>
+        <button onclick="showRaiseControls()" class="raise">Raise</button>
         <button onclick="sendcallandcheck()" class="check">Check</button>
+
+        <div id="raiseControls" style="display: none; margin-top: 20px">
+          <input type="range" id="raiseSlider" min="0" max="1000" step="1" oninput="syncRaiseInput()" />
+          <input type="number" id="raiseInput" min="0" step="1" oninput="syncRaiseSlider()" />
+          <button onclick="sendRaise()">Confirm Raise</button>
       </div>
       <button onclick="debug()" class="debug">debug</button>
       <div id="handBox" class="hand-box" style="display: none">

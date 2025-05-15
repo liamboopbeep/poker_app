@@ -60,11 +60,6 @@ function sendFold() {
   socket.emit("player_fold", code);
 }
 
-function sendbet(bet) {
-  const code = document.getElementById("code").value.toUpperCase();
-  socket.emit("player_bet", { code, bet });
-}
-
 function sendcallandcheck() {
   const code = document.getElementById("code").value.toUpperCase();
   socket.emit("player_callandcheck", code);
@@ -75,4 +70,43 @@ function debug() {
   socket.emit("debug", code, (response) => {
     console.log("DEBUG RESPONSE:", response);
   });
+}
+
+function showRaiseControls() {
+  const raiseControls = document.getElementById("raiseControls");
+
+  const minRaise = 4;
+  const maxRaise = 1000;
+
+  const slider = document.getElementById("raiseSlider");
+  const input = document.getElementById("raiseInput");
+
+  slider.min = minRaise;
+  slider.max = maxRaise;
+  slider.value = minRaise;
+
+  input.min = minRaise;
+  input.max = maxRaise;
+  input.value = minRaise;
+
+  raiseControls.style.display = "block";
+}
+
+function syncRaiseInput() {
+  const slider = document.getElementById("raiseSlider");
+  const input = document.getElementById("raiseInput");
+  input.value = slider.value;
+}
+
+function syncRaiseSlider() {
+  const slider = document.getElementById("raiseSlider");
+  const input = document.getElementById("raiseInput");
+  slider.value = input.value;
+}
+
+function sendRaise() {
+  const code = document.getElementById("code").value.toUpperCase();
+  const raiseAmount = parseInt(document.getElementById("raiseInput").value);
+  socket.emit("player_raise", code, raiseAmount);
+  document.getElementById("raiseControls").style.display = "none";
 }

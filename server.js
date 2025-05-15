@@ -247,6 +247,31 @@ io.on("connection", (socket) => {
     io.to(code).emit("players_update", game.players, game.state);
   });
 
+  socket.on("player_raise", (code, raiseAmount) => {
+    const game = games[code];
+    if (!game) return;
+
+    const currentPlayer = game.players.find((p) => p.isTurn);
+
+    // Clear current turn and broadcast action
+    currentPlayer.isTurn = false;
+    send_bet(code, currentPlayer, game.state.highestbet - currentPlayer.bet + raiseAmount);
+
+    // get index of current player
+    let nextIndex = game.players.indexOf(currentPlayer);
+    const totalPlayers = game.players.length;
+
+    // find next player who not folded
+    do {
+      nextIndex = (nextIndex + 1) % totalPlayers;
+    } while (game.players[nextIndex].folded && nextIndex !== game.players.indexOf(currentPlayer));
+
+    const nextPlayer = game.players[nextIndex];
+    nextPlayer.isTurn = true;
+
+    io.to(code).emit("players_update", game.players, game.state);
+  });
+
   socket.on("player_fold", (code) => {
     const game = games[code];
     if (!game) return;

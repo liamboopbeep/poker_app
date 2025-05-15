@@ -54,7 +54,8 @@ function startGame() {
 
 socket.on("players_update", (players, gameState) => {
   console.log(players);
-  document.getElementById("potDisplay") = `Pot: $${gameState.pot}`;
+  document.getElementById("potDisplay").textContent = `Pot: $${gameState.pot}`;
+
   seatIds.forEach((id, index) => {
     const seatDiv = document.getElementById(id);
     const player = players[index];
