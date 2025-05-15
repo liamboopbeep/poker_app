@@ -28,7 +28,7 @@ socket.on("your_hand", (hand) => {
   display.textContent = hand.join("  ");
 });
 
-socket.on("players_update", (players) => {
+socket.on("players_update", (players, gameState) => {
   const me = players.find((player) => player.id === socket.id);
   const isMyTurn = me && me.isTurn;
 
@@ -37,9 +37,14 @@ socket.on("players_update", (players) => {
   actionsEl.style.opacity = isMyTurn ? "1.0" : "0.4";
 
   const buttons = actionsEl.querySelectorAll("button");
+  const checkbutton = actionsEl.querySelector(".check");
   buttons.forEach((btn) => {
     btn.disabled = !isMyTurn;
   });
+
+  if (checkbutton && me && gameState.highestbet) {
+    checkbutton.textContent = me.bet === gameState.highestbet ? "Check" : "Call";
+  }
 
   if (me) {
     document.querySelector("#playerInfo .player-name").textContent = me.name;
@@ -63,4 +68,11 @@ function sendbet(bet) {
 function sendcallandcheck() {
   const code = document.getElementById("code").value.toUpperCase();
   socket.emit("player_callandcheck", code);
+}
+
+function debug() {
+  const code = document.getElementById("code").value.toUpperCase();
+  socket.emit("debug", code, (response) => {
+    console.log("DEBUG RESPONSE:", response);
+  });
 }

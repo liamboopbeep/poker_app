@@ -55,24 +55,22 @@ body {
 button.fold {
   background-color: #d63031;
 }
-
-button.check {
-  background-color: #0984e3;
-}
-
-button.bet {
-  background-color: #00cec9;
-}
-
 button.fold:hover {
   background-color: #c0392b;
 }
 
+button.check {
+  background-color: #0bca1b;
+}
 button.check:hover {
-  background-color: #0077cc;
+  background-color: #4ec981;
 }
 
-button.bet:hover {
+button.raise {
+  background-color: #00cec9;
+}
+
+button.raise:hover {
   background-color: #00b3b3;
 }
 

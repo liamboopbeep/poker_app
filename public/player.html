@@ -13,11 +13,11 @@
       </div>
 
       <div id="actions" class="action-buttons" style="display: none">
-        <button onclick="sendFold('fold')" class="fold">Fold</button>
-        <button onclick="sendAction('check')" class="check">Check</button>
-        <button onclick="sendAction('bet')" class="bet">Bet</button>
+        <button onclick="sendFold()" class="fold">Fold</button>
+        <button onclick="sendAction('bet')" class="raise">Raise</button>
+        <button onclick="sendcallandcheck()" class="check">Check</button>
       </div>
-
+      <button onclick="debug()" class="debug">debug</button>
       <div id="handBox" class="hand-box" style="display: none">
         <h3>Your Hand:</h3>
         <div id="handDisplay"></div>

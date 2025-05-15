@@ -41,25 +41,19 @@ function dealHands(game) {
 function send_bet(code, player, bet) {
   const game = games[code];
   if (!game || !player || bet <= 0 || player.folded || player.balance < bet) return;
-
-  // Deduct the bet from player
   player.balance -= bet;
-
-  // Add to the pot
+  player.bet += bet;
   game.state.pot += bet;
-
-  // Update highest bet if needed
   if (bet > game.state.highestbet) {
     game.state.highestbet = bet;
   }
-
   // Update players info
-  io.to(code).emit("players_update", game.players);
+  io.to(code).emit("players_update", game.players, game.state);
 }
 
 const minimalbet = 2;
 
-let games = {}; // sessionCode => { players: [...], state: {...} }
+let games = {};
 
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
@@ -83,7 +77,7 @@ io.on("connection", (socket) => {
 
     socket.join(code);
     console.log("nailed");
-    io.to(code).emit("players_update", game.players);
+    io.to(code).emit("players_update", game.players, game.state);
     callback({ success: true, message: "Rejoined successfully" });
   });
 
@@ -100,7 +94,7 @@ io.on("connection", (socket) => {
     }
 
     socket.join(code);
-    io.to(code).emit("players_update", game.players, response);
+    io.to(code).emit("players_update", game.players, game.state);
     callback({ success: true, message: "Rejoined successfully" });
   });
 
@@ -121,7 +115,7 @@ io.on("connection", (socket) => {
     if (!game) {
       return callback({ success: false, message: "Game not found" });
     }
-    io.to(code).emit("players_update", game.players, response);
+    io.to(code).emit("players_update", game.players, game.state);
   });
 
   socket.on("join_game", (code, name, callback) => {
@@ -148,6 +142,7 @@ io.on("connection", (socket) => {
       name,
       hand: [],
       balance: 1000,
+      bet: 0,
       isDealer: false,
       isSmallBlind: false,
       isBigBlind: false,
@@ -160,7 +155,7 @@ io.on("connection", (socket) => {
 
     console.log(`Player joined: ${name} (ID: ${socket.id})`);
 
-    io.to(code).emit("players_update", game.players);
+    io.to(code).emit("players_update", game.players, game.state);
     callback({ success: true });
   });
 
@@ -195,8 +190,8 @@ io.on("connection", (socket) => {
         bigBlind.isBigBlind = true;
         bigBlind.isTurn = false;
 
-        send_bet(code, game.players[dealerIndex], minimalbet / 2); // Small blind
-        send_bet(code, game.players[bigBlindIndex], minimalbet); // Big blind
+        send_bet(code, game.players[dealerIndex], minimalbet / 2);
+        send_bet(code, game.players[bigBlindIndex], minimalbet);
       } else {
         const smallBlindIndex = (dealerIndex + 1) % totalPlayers;
         const bigBlindIndex = (dealerIndex + 2) % totalPlayers;
@@ -206,11 +201,11 @@ io.on("connection", (socket) => {
         game.players[bigBlindIndex].isBigBlind = true;
         game.players[firstToActIndex].isTurn = true;
 
-        send_bet(code, game.players[smallBlindIndex], minimalbet / 2); // Small blind
-        send_bet(code, game.players[bigBlindIndex], minimalbet); // Big blind
+        send_bet(code, game.players[smallBlindIndex], minimalbet / 2);
+        send_bet(code, game.players[bigBlindIndex], minimalbet);
       }
 
-      io.to(code).emit("players_update", game.players);
+      io.to(code).emit("players_update", game.players, game.state);
     }
   });
 
@@ -220,7 +215,7 @@ io.on("connection", (socket) => {
       const index = game.players.findIndex((p) => p.id === socket.id);
       if (index !== -1) {
         game.players.splice(index, 1);
-        io.to(code).emit("players_update", game.players);
+        io.to(code).emit("players_update", game.players, game.state);
         break;
       }
       console.log(Object.entries(game.players));
@@ -235,7 +230,7 @@ io.on("connection", (socket) => {
 
     // Clear current turn and broadcast action
     currentPlayer.isTurn = false;
-    currentPlayer.folded = true;
+    send_bet(code, currentPlayer, game.state.highestbet - currentPlayer.bet);
 
     // get index of current player
     let nextIndex = game.players.indexOf(currentPlayer);
@@ -246,12 +241,10 @@ io.on("connection", (socket) => {
       nextIndex = (nextIndex + 1) % totalPlayers;
     } while (game.players[nextIndex].folded && nextIndex !== game.players.indexOf(currentPlayer));
 
-    // Update turn
-    // game.players.forEach(p => p.isTurn = false);
     const nextPlayer = game.players[nextIndex];
     nextPlayer.isTurn = true;
 
-    io.to(code).emit("players_update", game.players);
+    io.to(code).emit("players_update", game.players, game.state);
   });
 
   socket.on("player_fold", (code) => {
@@ -260,7 +253,6 @@ io.on("connection", (socket) => {
 
     const currentPlayer = game.players.find((p) => p.isTurn);
 
-    // Clear current turn and broadcast action
     currentPlayer.isTurn = false;
     currentPlayer.folded = true;
 
@@ -268,22 +260,22 @@ io.on("connection", (socket) => {
     let nextIndex = game.players.indexOf(currentPlayer);
     const totalPlayers = game.players.length;
 
-    // find next player who not folded
     do {
       nextIndex = (nextIndex + 1) % totalPlayers;
     } while (game.players[nextIndex].folded && nextIndex !== game.players.indexOf(currentPlayer));
-
-    // Update turn
-    // game.players.forEach(p => p.isTurn = false);
     const nextPlayer = game.players[nextIndex];
     nextPlayer.isTurn = true;
 
-    io.to(code).emit("players_update", game.players);
+    io.to(code).emit("players_update", game.players, game.state);
   });
 
-  socket.on("player_bet", ({ code, bet }) => {
+  socket.on("debug", (code, callback) => {
     const game = games[code];
-    if (!game) return;
+    if (!game) {
+      console.log("Debug failed: game not found");
+      return callback(`Game ${code} not found`);
+    }
+    callback(game);
   });
 });
 
