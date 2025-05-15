@@ -1,5 +1,5 @@
 const socket = io();
-const seatIds = ["seat-top-left", "seat-top-right", "seat-bottom-left", "seat-bottom-right"];
+const seatIds = ["seat-top-left", "seat-top-right", "seat-bottom-right", "seat-bottom-left"];
 
 let currentGameCode = null;
 
@@ -52,9 +52,9 @@ function startGame() {
   }
 }
 
-socket.on("players_update", (players) => {
+socket.on("players_update", (players, gameState) => {
   console.log(players);
-
+  document.getElementById("potDisplay") = `Pot: $${gameState.pot}`;
   seatIds.forEach((id, index) => {
     const seatDiv = document.getElementById(id);
     const player = players[index];
