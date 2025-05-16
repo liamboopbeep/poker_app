@@ -103,7 +103,7 @@ io.on("connection", (socket) => {
     games[code] = {
       players: [],
       deck: [],
-      state: { pot: 0, highestbet: 0, community_card: [] },
+      state: { pot: 0, highestbet: 0, minraise: 0, community_card: [] },
     };
     console.log("All current games:", Object.keys(games));
     socket.join(code);
@@ -256,7 +256,7 @@ io.on("connection", (socket) => {
     // Clear current turn and broadcast action
     currentPlayer.isTurn = false;
     send_bet(code, currentPlayer, game.state.highestbet - currentPlayer.bet + raiseAmount);
-
+    game.state.minraise = raiseAmount;
     // get index of current player
     let nextIndex = game.players.indexOf(currentPlayer);
     const totalPlayers = game.players.length;

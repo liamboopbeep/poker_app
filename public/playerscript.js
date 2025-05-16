@@ -52,6 +52,16 @@ socket.on("players_update", (players, gameState) => {
     document.querySelector("#playerInfo .dealer").hidden = !me.isDealer;
     document.querySelector("#playerInfo .small-blind").hidden = !me.isSmallBlind;
     document.querySelector("#playerInfo .big-blind").hidden = !me.isBigBlind;
+
+    document.querySelector("#raiseControls .amount_to_call").textContent = gameState.highestbet - me.bet;
+
+    document.getElementById("raiseSlider").min = gameState.minraise;
+    document.getElementById("raiseSlider").max = me.balance;
+    document.getElementById("raiseSlider").value = gameState.minraise;
+
+    document.getElementById("raiseInput").min = gameState.minraise;
+    document.getElementById("raiseInput").max = me.balance;
+    document.getElementById("raiseInput").value = gameState.minraise;
   }
 });
 
@@ -75,19 +85,8 @@ function debug() {
 function showRaiseControls() {
   const raiseControls = document.getElementById("raiseControls");
 
-  const minRaise = 4;
-  const maxRaise = 1000;
-
   const slider = document.getElementById("raiseSlider");
   const input = document.getElementById("raiseInput");
-
-  slider.min = minRaise;
-  slider.max = maxRaise;
-  slider.value = minRaise;
-
-  input.min = minRaise;
-  input.max = maxRaise;
-  input.value = minRaise;
 
   raiseControls.style.display = "block";
 }
@@ -95,6 +94,8 @@ function showRaiseControls() {
 function syncRaiseInput() {
   const slider = document.getElementById("raiseSlider");
   const input = document.getElementById("raiseInput");
+  const total = document.querySelector("#raiseControls .total");
+  total.textContent = `$${parseInt(document.querySelector("#raiseControls .amount_to_call").textContent) + parseInt(slider.value)}`;
   input.value = slider.value;
 }
 
