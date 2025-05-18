@@ -103,7 +103,7 @@ io.on("connection", (socket) => {
     games[code] = {
       players: [],
       deck: [],
-      state: { pot: 0, highestbet: 0, minraise: 0, community_card: [] },
+      state: { pot: 0, highestbet: 0, minraise: 1, community_card: [] },
     };
     console.log("All current games:", Object.keys(games));
     socket.join(code);
