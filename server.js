@@ -38,6 +38,20 @@ function dealHands(game) {
   }
 }
 
+function checkStartNextRound(game) {
+  const activePlayers = game.players.filter((p) => !p.folded && !p.allIn);
+  const allCalled = activePlayers.every((p) => p.bet === game.state.highestBet);
+
+  const lastRaiserIndex = game.players.findIndex((p) => p.id === game.state.lastRaiserId);
+  const currentTurnIndex = game.state.currentTurnIndex;
+
+  const raiserHadTurnAgain = currentTurnIndex === lastRaiserIndex;
+
+  if (allCalled && raiserHadTurnAgain) {
+    startNextPhase(game);
+  }
+}
+
 function send_bet(code, player, bet) {
   const game = games[code];
   if (!game || !player || bet <= 0 || player.folded || player.balance < bet) return;

@@ -84,10 +84,6 @@ function debug() {
 
 function showRaiseControls() {
   const raiseControls = document.getElementById("raiseControls");
-
-  const slider = document.getElementById("raiseSlider");
-  const input = document.getElementById("raiseInput");
-
   raiseControls.style.display = "block";
 }
 
