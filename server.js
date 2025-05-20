@@ -41,13 +41,10 @@ function dealHands(game) {
 function checkStartNextRound(game) {
   const activePlayers = game.players.filter((p) => !p.folded && !p.allIn);
   const allCalled = activePlayers.every((p) => p.bet === game.state.highestBet);
+  const currentPlayer = game.players.find((p) => p.isTurn);
+  const lastRaiser = game.players.find((p) => p.id === game.state.lastRaiserId);
 
-  const lastRaiserIndex = game.players.findIndex((p) => p.id === game.state.lastRaiserId);
-  const currentTurnIndex = game.state.currentTurnIndex;
-
-  const raiserHadTurnAgain = currentTurnIndex === lastRaiserIndex;
-
-  if (allCalled && raiserHadTurnAgain) {
+  if (allCalled && currentPlayer.id === lastRaiser.id) {
     startNextPhase(game);
   }
 }
@@ -117,7 +114,7 @@ io.on("connection", (socket) => {
     games[code] = {
       players: [],
       deck: [],
-      state: { pot: 0, highestbet: 0, minraise: 1, community_card: [] },
+      state: { pot: 0, highestbet: 0, minraise: 1, lastRaiserId, community_card: [] },
     };
     console.log("All current games:", Object.keys(games));
     socket.join(code);
