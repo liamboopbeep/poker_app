@@ -38,15 +38,35 @@ function dealHands(game) {
   }
 }
 
-function checkStartNextRound(game) {
-  const activePlayers = game.players.filter((p) => !p.folded && !p.allIn);
-  const allCalled = activePlayers.every((p) => p.bet === game.state.highestBet);
-  const currentPlayer = game.players.find((p) => p.isTurn);
+function checkStartNextRound(game, currentPlayer) {
+  const activePlayers = game.players.filter((p) => !p.folded);
+  const allCalled = activePlayers.every((p) => p.bet === game.state.highestbet);
   const lastRaiser = game.players.find((p) => p.id === game.state.lastRaiserId);
 
   if (allCalled && currentPlayer.id === lastRaiser.id) {
-    startNextPhase(game);
+    currentPlayer.isTurn = false;
+    startNextPhase();
+  } else {
+    console.log("allCalled:", allCalled);
+    console.log("currentPlayer.id:", currentPlayer.id);
+    console.log("lastRaiser.id:", lastRaiser?.id);
+    console.log("Condition (allCalled && currentPlayer.id === lastRaiser.id):", allCalled && currentPlayer.id === lastRaiser?.id);
+    currentPlayer.isTurn = false;
+    // get index of current player
+    let nextIndex = game.players.indexOf(currentPlayer);
+    const totalPlayers = game.players.length;
+
+    do {
+      nextIndex = (nextIndex + 1) % totalPlayers;
+    } while (game.players[nextIndex].folded && nextIndex !== game.players.indexOf(currentPlayer));
+
+    const nextPlayer = game.players[nextIndex];
+    nextPlayer.isTurn = true;
   }
+}
+
+function startNextPhase() {
+  console.log(flop);
 }
 
 function send_bet(code, player, bet) {
@@ -114,7 +134,7 @@ io.on("connection", (socket) => {
     games[code] = {
       players: [],
       deck: [],
-      state: { pot: 0, highestbet: 0, minraise: 1, lastRaiserId, community_card: [] },
+      state: { pot: 0, highestbet: 0, minraise: 1, lastRaiserId: ``, community_card: [] },
     };
     console.log("All current games:", Object.keys(games));
     socket.join(code);
@@ -203,6 +223,7 @@ io.on("connection", (socket) => {
 
         send_bet(code, game.players[dealerIndex], minimalbet / 2);
         send_bet(code, game.players[bigBlindIndex], minimalbet);
+        game.state.lastRaiserId = game.players[bigBlindIndex].id;
       } else {
         const smallBlindIndex = (dealerIndex + 1) % totalPlayers;
         const bigBlindIndex = (dealerIndex + 2) % totalPlayers;
@@ -214,6 +235,7 @@ io.on("connection", (socket) => {
 
         send_bet(code, game.players[smallBlindIndex], minimalbet / 2);
         send_bet(code, game.players[bigBlindIndex], minimalbet);
+        game.state.lastRaiserId = game.players[bigBlindIndex].id;
       }
 
       io.to(code).emit("players_update", game.players, game.state);
@@ -240,20 +262,8 @@ io.on("connection", (socket) => {
     const currentPlayer = game.players.find((p) => p.isTurn);
 
     // Clear current turn and broadcast action
-    currentPlayer.isTurn = false;
     send_bet(code, currentPlayer, game.state.highestbet - currentPlayer.bet);
-
-    // get index of current player
-    let nextIndex = game.players.indexOf(currentPlayer);
-    const totalPlayers = game.players.length;
-
-    // find next player who not folded
-    do {
-      nextIndex = (nextIndex + 1) % totalPlayers;
-    } while (game.players[nextIndex].folded && nextIndex !== game.players.indexOf(currentPlayer));
-
-    const nextPlayer = game.players[nextIndex];
-    nextPlayer.isTurn = true;
+    checkStartNextRound(game, currentPlayer);
 
     io.to(code).emit("players_update", game.players, game.state);
   });
@@ -265,20 +275,10 @@ io.on("connection", (socket) => {
     const currentPlayer = game.players.find((p) => p.isTurn);
 
     // Clear current turn and broadcast action
-    currentPlayer.isTurn = false;
     send_bet(code, currentPlayer, game.state.highestbet - currentPlayer.bet + raiseAmount);
     game.state.minraise = raiseAmount;
-    // get index of current player
-    let nextIndex = game.players.indexOf(currentPlayer);
-    const totalPlayers = game.players.length;
-
-    // find next player who not folded
-    do {
-      nextIndex = (nextIndex + 1) % totalPlayers;
-    } while (game.players[nextIndex].folded && nextIndex !== game.players.indexOf(currentPlayer));
-
-    const nextPlayer = game.players[nextIndex];
-    nextPlayer.isTurn = true;
+    game.state.lastRaiserId = currentPlayer.id;
+    checkStartNextRound(game, currentPlayer);
 
     io.to(code).emit("players_update", game.players, game.state);
   });
@@ -288,19 +288,8 @@ io.on("connection", (socket) => {
     if (!game) return;
 
     const currentPlayer = game.players.find((p) => p.isTurn);
-
-    currentPlayer.isTurn = false;
     currentPlayer.folded = true;
-
-    // get index of current player
-    let nextIndex = game.players.indexOf(currentPlayer);
-    const totalPlayers = game.players.length;
-
-    do {
-      nextIndex = (nextIndex + 1) % totalPlayers;
-    } while (game.players[nextIndex].folded && nextIndex !== game.players.indexOf(currentPlayer));
-    const nextPlayer = game.players[nextIndex];
-    nextPlayer.isTurn = true;
+    checkStartNextRound(game, currentPlayer);
 
     io.to(code).emit("players_update", game.players, game.state);
   });

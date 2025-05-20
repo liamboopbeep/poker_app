@@ -98,6 +98,8 @@ function syncRaiseInput() {
 function syncRaiseSlider() {
   const slider = document.getElementById("raiseSlider");
   const input = document.getElementById("raiseInput");
+  const total = document.querySelector("#raiseControls .total");
+  total.textContent = `$${parseInt(document.querySelector("#raiseControls .amount_to_call").textContent) + parseInt(input.value)}`;
   slider.value = input.value;
 }
 
