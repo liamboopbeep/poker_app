@@ -30,23 +30,37 @@ socket.on("your_hand", (hand) => {
 
 socket.on("players_update", (players, gameState) => {
   const me = players.find((player) => player.id === socket.id);
-  const isMyTurn = me && me.isTurn;
-
-  const actionsEl = document.getElementById("actions");
-  actionsEl.style.display = me ? "block" : "none";
-  actionsEl.style.opacity = isMyTurn ? "1.0" : "0.4";
-
-  const buttons = actionsEl.querySelectorAll("button");
-  const checkbutton = actionsEl.querySelector(".check");
-  buttons.forEach((btn) => {
-    btn.disabled = !isMyTurn;
-  });
-
-  if (checkbutton && me && gameState.highestbet) {
-    checkbutton.textContent = me.bet === gameState.highestbet ? "Check" : "Call";
-  }
-
   if (me) {
+    const isMyTurn = me && me.isTurn;
+
+    const actionsEl = document.getElementById("actions");
+    actionsEl.style.display = me ? "block" : "none";
+    actionsEl.style.opacity = isMyTurn ? "1.0" : "0.4";
+
+    const buttons = actionsEl.querySelectorAll("button");
+    const checkbutton = actionsEl.querySelector(".check");
+    const raiseButton = actionsEl.querySelector(".raise");
+    const callButton = actionsEl.querySelector(".call");
+    const allinButton = actionsEl.querySelector(".allin");
+
+    buttons.forEach((btn) => {
+      btn.disabled = !isMyTurn;
+    });
+
+    if (checkbutton && me && gameState.highestbet) {
+      checkbutton.textContent = me.bet === gameState.highestbet ? "Check" : "Call";
+    }
+
+    if (me.balance + me.bet <= gameState.highestbet) {
+      if (callButton) callButton.style.display = "none";
+      if (raiseButton) raiseButton.style.display = "none";
+      if (allinButton) allinButton.style.display = "inline-block";
+    } else {
+      if (callButton) callButton.style.display = "inline-block";
+      if (raiseButton) raiseButton.style.display = "inline-block";
+      if (allinButton) allinButton.style.display = "none";
+    }
+
     document.querySelector("#playerInfo .player-name").textContent = me.name;
     document.querySelector("#playerInfo .balance").textContent = `Balance: $${me.balance}`;
     document.querySelector("#playerInfo .dealer").hidden = !me.isDealer;
