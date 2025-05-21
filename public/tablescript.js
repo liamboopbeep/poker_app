@@ -54,38 +54,40 @@ function startGame() {
 
 socket.on("players_update", (game) => {
   console.log(game.players);
-  const mainpot = game.state.pots?.[0]?.amount ?? 0;
+  const mainpot = game.pots?.[0]?.amount ?? 0;
   document.getElementById("potDisplay").textContent = `Pot: $${mainpot}`;
 
   seatIds.forEach((id, index) => {
     const seatDiv = document.getElementById(id);
-    const player = game.players[index];
+    if (Array.isArray(game.players) && index >= 0 && index < game.players.length) {
+      const player = game.players[index];
 
-    const playerNameDiv = seatDiv.querySelector(".player-name");
+      const playerNameDiv = seatDiv.querySelector(".player-name");
 
-    const dealerBadge = seatDiv.querySelector(".dealer");
-    const sbBadge = seatDiv.querySelector(".small-blind");
-    const bbBadge = seatDiv.querySelector(".big-blind");
+      const dealerBadge = seatDiv.querySelector(".dealer");
+      const sbBadge = seatDiv.querySelector(".small-blind");
+      const bbBadge = seatDiv.querySelector(".big-blind");
 
-    if (player) {
-      if (playerNameDiv) playerNameDiv.textContent = player.name;
-      seatDiv.style.backgroundColor = player.isTurn ? "red" : "#1e5631";
-      seatDiv.style.opacity = player.folded ? "0.4" : "1";
+      if (player) {
+        if (playerNameDiv) playerNameDiv.textContent = player.name;
+        seatDiv.style.backgroundColor = player.isTurn ? "red" : "#1e5631";
+        seatDiv.style.opacity = player.folded ? "0.4" : "1";
 
-      // Update badges visibility
-      dealerBadge.hidden = !player.isDealer;
-      sbBadge.hidden = !player.isSmallBlind;
-      bbBadge.hidden = !player.isBigBlind;
-    } else {
-      // Reset seat
-      if (playerNameDiv) playerNameDiv.textContent = "";
-      seatDiv.style.backgroundColor = "#1e5631";
-      seatDiv.style.opacity = "1";
+        // Update badges visibility
+        dealerBadge.hidden = !player.isDealer;
+        sbBadge.hidden = !player.isSmallBlind;
+        bbBadge.hidden = !player.isBigBlind;
+      } else {
+        // Reset seat
+        if (playerNameDiv) playerNameDiv.textContent = "";
+        seatDiv.style.backgroundColor = "#1e5631";
+        seatDiv.style.opacity = "1";
 
-      // Hide all badges
-      dealerBadge.hidden = true;
-      sbBadge.hidden = true;
-      bbBadge.hidden = true;
+        // Hide all badges
+        dealerBadge.hidden = true;
+        sbBadge.hidden = true;
+        bbBadge.hidden = true;
+      }
     }
   });
 });

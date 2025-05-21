@@ -106,14 +106,26 @@ function checkStartNextRound(game, currentPlayer) {
 function send_bet(code, player, bet) {
   const game = games[code];
   if (!game || !player || bet <= 0 || player.folded || player.balance < bet) return;
+
   player.balance -= bet;
   player.bet += bet;
-  game.pots[0].amount += bet;
-  if (bet > game.state.highestbet) {
-    game.state.highestbet = bet;
+
+  if (bet < game.state.highestbet) {
+    game.pots[game.pots.length - 1].amount += bet;
+    // Create new side pot
+    const newPot = {
+      amount: 0,
+      contenders: game.players.filter((p) => !p.folded && p.balance > 0 && p.id !== player.id).map((p) => p.id),
+    };
+    game.pots.push(newPot);
+  } else {
+    game.pots[game.pots.length - 1].amount += bet;
+    if (bet > game.state.highestbet) {
+      game.state.highestbet = bet;
+    }
   }
-  // Update players info
-  io.to(code).emit("players_update", game);
+
+  io.to(code).emit("players_update", game.players, game.state);
 }
 
 const minimalbet = 2;
@@ -239,6 +251,13 @@ io.on("connection", (socket) => {
         p.folded = false;
       });
 
+      game.pots = [
+        {
+          amount: 0,
+          contenders: game.players.map((p) => p.id),
+        },
+      ];
+
       const totalPlayers = game.players.length;
 
       // Assign Dealer
@@ -272,13 +291,6 @@ io.on("connection", (socket) => {
         send_bet(code, game.players[bigBlindIndex], minimalbet);
         game.state.lastRaiserId = game.players[bigBlindIndex].id;
       }
-
-      game.pots = [
-        {
-          amount: 0,
-          contenders: game.players.map((p) => p.id), // All players are contenders at game start
-        },
-      ];
 
       io.to(code).emit("players_update", game);
     }
@@ -320,6 +332,18 @@ io.on("connection", (socket) => {
     send_bet(code, currentPlayer, game.state.highestbet - currentPlayer.bet + raiseAmount);
     game.state.minraise = raiseAmount;
     game.state.lastRaiserId = currentPlayer.id;
+    checkStartNextRound(game, currentPlayer);
+
+    io.to(code).emit("players_update", game);
+  });
+
+  socket.on("player_AllIn", (code) => {
+    const game = games[code];
+    if (!game) return;
+
+    const currentPlayer = game.players.find((p) => p.isTurn);
+    send_bet(code, currentPlayer, currentPlayer.balance);
+    currentPlayer.allIn = true;
     checkStartNextRound(game, currentPlayer);
 
     io.to(code).emit("players_update", game);
