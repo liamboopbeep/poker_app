@@ -38,19 +38,55 @@ function dealHands(game) {
   }
 }
 
+function getNextPhase(current) {
+  const phases = ["preflop", "flop", "turn", "river", "showdown"];
+  const idx = phases.indexOf(current);
+  return phases[idx + 1] || "showdown";
+}
+
 function checkStartNextRound(game, currentPlayer) {
-  const activePlayers = game.players.filter((p) => !p.folded);
+  const activePlayers = game.players.filter((p) => !p.folded && !p.allIn);
   const allCalled = activePlayers.every((p) => p.bet === game.state.highestbet);
   const lastRaiser = game.players.find((p) => p.id === game.state.lastRaiserId);
 
   if (allCalled && currentPlayer.id === lastRaiser.id) {
-    currentPlayer.isTurn = false;
-    startNextPhase();
+    game.players.forEach((player) => {
+      player.bet = 0;
+      player.isTurn = false;
+    });
+
+    game.state.highestbet = 0;
+    game.state.lastRaiserId = null;
+
+    switch (game.state.phase) {
+      case "preflop":
+        game.state.community_card = [game.deck.pop(), game.deck.pop(), game.deck.pop()];
+        break;
+      case "flop":
+        game.state.community_card.push(game.deck.pop());
+        break;
+      case "turn":
+        game.state.community_card.push(game.deck.pop());
+        break;
+      case "river":
+        game.state.community_card.push(game.deck.pop());
+        break;
+      case "showdown":
+        return handleShowdown(game);
+    }
+    game.state.phase = getNextPhase(game.state.phase);
+    // Determine the first active player to the left of the dealer
+    const dealerIndex = game.players.findIndex((p) => p.isDealer);
+    const total = game.players.length;
+
+    for (let i = 1; i <= total; i++) {
+      const nextIndex = (dealerIndex + i) % total;
+      if (!game.players[nextIndex].folded && !game.players[nextIndex].allIn) {
+        game.players[nextIndex].isTurn = true;
+        break;
+      }
+    }
   } else {
-    console.log("allCalled:", allCalled);
-    console.log("currentPlayer.id:", currentPlayer.id);
-    console.log("lastRaiser.id:", lastRaiser?.id);
-    console.log("Condition (allCalled && currentPlayer.id === lastRaiser.id):", allCalled && currentPlayer.id === lastRaiser?.id);
     currentPlayer.isTurn = false;
     // get index of current player
     let nextIndex = game.players.indexOf(currentPlayer);
@@ -63,10 +99,6 @@ function checkStartNextRound(game, currentPlayer) {
     const nextPlayer = game.players[nextIndex];
     nextPlayer.isTurn = true;
   }
-}
-
-function startNextPhase() {
-  console.log(flop);
 }
 
 function send_bet(code, player, bet) {
@@ -134,7 +166,7 @@ io.on("connection", (socket) => {
     games[code] = {
       players: [],
       deck: [],
-      state: { pot: 0, highestbet: 0, minraise: 1, lastRaiserId: ``, community_card: [] },
+      state: { phase: "preflop", pot: 0, highestbet: 0, minraise: 1, lastRaiserId: "", community_card: [] },
     };
     console.log("All current games:", Object.keys(games));
     socket.join(code);
@@ -194,7 +226,7 @@ io.on("connection", (socket) => {
     const game = games[code];
     if (game && game.players.length >= 2) {
       console.log("game start!");
-
+      dealHands(game);
       // Clear previous roles
       game.players.forEach((p) => {
         p.isDealer = false;
