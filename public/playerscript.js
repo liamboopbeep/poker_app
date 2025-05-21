@@ -28,8 +28,8 @@ socket.on("your_hand", (hand) => {
   display.textContent = hand.join("  ");
 });
 
-socket.on("players_update", (players, gameState) => {
-  const me = players.find((player) => player.id === socket.id);
+socket.on("players_update", (game) => {
+  const me = game.players.find((player) => player.id === socket.id);
   if (me) {
     const isMyTurn = me && me.isTurn;
 
@@ -47,11 +47,11 @@ socket.on("players_update", (players, gameState) => {
       btn.disabled = !isMyTurn;
     });
 
-    if (checkbutton && me && gameState.highestbet) {
-      checkbutton.textContent = me.bet === gameState.highestbet ? "Check" : "Call";
+    if (checkbutton && me && game.state.highestbet) {
+      checkbutton.textContent = me.bet === game.state.highestbet ? "Check" : "Call";
     }
 
-    if (me.balance + me.bet <= gameState.highestbet) {
+    if (me.balance + me.bet <= game.state.highestbet) {
       if (callButton) callButton.style.display = "none";
       if (raiseButton) raiseButton.style.display = "none";
       if (allinButton) allinButton.style.display = "inline-block";
@@ -67,15 +67,15 @@ socket.on("players_update", (players, gameState) => {
     document.querySelector("#playerInfo .small-blind").hidden = !me.isSmallBlind;
     document.querySelector("#playerInfo .big-blind").hidden = !me.isBigBlind;
 
-    document.querySelector("#raiseControls .amount_to_call").textContent = gameState.highestbet - me.bet;
+    document.querySelector("#raiseControls .amount_to_call").textContent = game.state.highestbet - me.bet;
 
-    document.getElementById("raiseSlider").min = gameState.minraise;
+    document.getElementById("raiseSlider").min = game.state.minraise;
     document.getElementById("raiseSlider").max = me.balance;
-    document.getElementById("raiseSlider").value = gameState.minraise;
+    document.getElementById("raiseSlider").value = game.state.minraise;
 
-    document.getElementById("raiseInput").min = gameState.minraise;
+    document.getElementById("raiseInput").min = game.state.minraise;
     document.getElementById("raiseInput").max = me.balance;
-    document.getElementById("raiseInput").value = gameState.minraise;
+    document.getElementById("raiseInput").value = game.state.minraise;
   }
 });
 

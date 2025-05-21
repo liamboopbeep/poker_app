@@ -52,13 +52,14 @@ function startGame() {
   }
 }
 
-socket.on("players_update", (players, gameState) => {
-  console.log(players);
-  document.getElementById("potDisplay").textContent = `Pot: $${gameState.pot}`;
+socket.on("players_update", (game) => {
+  console.log(game.players);
+  const mainpot = game.state.pots?.[0]?.amount ?? 0;
+  document.getElementById("potDisplay").textContent = `Pot: $${mainpot}`;
 
   seatIds.forEach((id, index) => {
     const seatDiv = document.getElementById(id);
-    const player = players[index];
+    const player = game.players[index];
 
     const playerNameDiv = seatDiv.querySelector(".player-name");
 

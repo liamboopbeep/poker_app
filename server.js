@@ -6,11 +6,13 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
+const Hand = require("pokersolver");
+
 app.use(express.static("public"));
 
 function createShuffledDeck() {
-  const suits = ["♠", "♥", "♦", "♣"];
-  const ranks = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
+  const suits = ["s", "h", "d", "c"];
+  const ranks = ["2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K", "A"];
   let deck = [];
 
   for (let suit of suits) {
@@ -106,12 +108,12 @@ function send_bet(code, player, bet) {
   if (!game || !player || bet <= 0 || player.folded || player.balance < bet) return;
   player.balance -= bet;
   player.bet += bet;
-  game.state.pot += bet;
+  game.pots[0].amount += bet;
   if (bet > game.state.highestbet) {
     game.state.highestbet = bet;
   }
   // Update players info
-  io.to(code).emit("players_update", game.players, game.state);
+  io.to(code).emit("players_update", game);
 }
 
 const minimalbet = 2;
@@ -140,7 +142,7 @@ io.on("connection", (socket) => {
 
     socket.join(code);
     console.log("nailed");
-    io.to(code).emit("players_update", game.players, game.state);
+    io.to(code).emit("players_update", game);
     callback({ success: true, message: "Rejoined successfully" });
   });
 
@@ -157,7 +159,7 @@ io.on("connection", (socket) => {
     }
 
     socket.join(code);
-    io.to(code).emit("players_update", game.players, game.state);
+    io.to(code).emit("players_update", game);
     callback({ success: true, message: "Rejoined successfully" });
   });
 
@@ -166,7 +168,8 @@ io.on("connection", (socket) => {
     games[code] = {
       players: [],
       deck: [],
-      state: { phase: "preflop", pot: 0, highestbet: 0, minraise: 1, lastRaiserId: "", community_card: [] },
+      pots: [],
+      state: { phase: "preflop", highestbet: 0, minraise: 1, lastRaiserId: "", community_card: [] },
     };
     console.log("All current games:", Object.keys(games));
     socket.join(code);
@@ -178,7 +181,7 @@ io.on("connection", (socket) => {
     if (!game) {
       return callback({ success: false, message: "Game not found" });
     }
-    io.to(code).emit("players_update", game.players, game.state);
+    io.to(code).emit("players_update", game);
   });
 
   socket.on("join_game", (code, name, callback) => {
@@ -218,7 +221,7 @@ io.on("connection", (socket) => {
 
     console.log(`Player joined: ${name} (ID: ${socket.id})`);
 
-    io.to(code).emit("players_update", game.players, game.state);
+    io.to(code).emit("players_update", game);
     callback({ success: true });
   });
 
@@ -270,7 +273,14 @@ io.on("connection", (socket) => {
         game.state.lastRaiserId = game.players[bigBlindIndex].id;
       }
 
-      io.to(code).emit("players_update", game.players, game.state);
+      game.pots = [
+        {
+          amount: 0,
+          contenders: game.players.map((p) => p.id), // All players are contenders at game start
+        },
+      ];
+
+      io.to(code).emit("players_update", game);
     }
   });
 
@@ -280,7 +290,7 @@ io.on("connection", (socket) => {
       const index = game.players.findIndex((p) => p.id === socket.id);
       if (index !== -1) {
         game.players.splice(index, 1);
-        io.to(code).emit("players_update", game.players, game.state);
+        io.to(code).emit("players_update", game);
         break;
       }
       console.log(Object.entries(game.players));
@@ -297,7 +307,7 @@ io.on("connection", (socket) => {
     send_bet(code, currentPlayer, game.state.highestbet - currentPlayer.bet);
     checkStartNextRound(game, currentPlayer);
 
-    io.to(code).emit("players_update", game.players, game.state);
+    io.to(code).emit("players_update", game);
   });
 
   socket.on("player_raise", (code, raiseAmount) => {
@@ -312,7 +322,7 @@ io.on("connection", (socket) => {
     game.state.lastRaiserId = currentPlayer.id;
     checkStartNextRound(game, currentPlayer);
 
-    io.to(code).emit("players_update", game.players, game.state);
+    io.to(code).emit("players_update", game);
   });
 
   socket.on("player_fold", (code) => {
@@ -323,7 +333,7 @@ io.on("connection", (socket) => {
     currentPlayer.folded = true;
     checkStartNextRound(game, currentPlayer);
 
-    io.to(code).emit("players_update", game.players, game.state);
+    io.to(code).emit("players_update", game);
   });
 
   socket.on("debug", (code, callback) => {
