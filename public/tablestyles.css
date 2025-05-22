@@ -213,7 +213,7 @@ button:hover {
   gap: 32px;
   align-items: center;
   justify-content: center;
-  transform: translate(-50%, -50%); */
+  transform: translate(-50%, -50%);
 }
 
 .chip-stack-top-left {
