@@ -33,30 +33,48 @@ window.addEventListener("load", () => {
 });
 
 function renderChips(container, amount) {
-  container.innerHTML = ""; // Clear previous chips
+  if (container) {
+    container.innerHTML = "";
 
-  for (const chip of CHIP_VALUES) {
-    const count = Math.floor(amount / chip.value);
-    amount %= chip.value;
+    for (const chip of CHIP_VALUES) {
+      let count = Math.floor(amount / chip.value);
+      amount %= chip.value;
 
-    for (let i = 0; i < count; i++) {
-      const img = document.createElement("img");
-      img.src = `/images/${chip.img}`;
-      img.alt = chip.value;
-      container.appendChild(img);
+      let fullStacks = Math.floor(count / 10);
+      let remaining = count % 10;
+
+      // Helper to create a single stack of up to 10 chips
+      const createStack = (chipCount) => {
+        const column = document.createElement("div");
+        column.className = "chip-column";
+        column.style.position = "relative";
+
+        for (let j = 0; j < chipCount; j++) {
+          const img = document.createElement("img");
+          img.src = `/img/${chip.img}`;
+          img.alt = chip.value;
+          img.style.position = "absolute";
+          img.style.top = `-${j * 5}px`; // Overlap each chip by 2px
+          img.style.zIndex = j + 1;
+          img.style.width = "32px";
+          img.style.height = "30px";
+          column.appendChild(img);
+        }
+
+        container.appendChild(column);
+      };
+
+      // Add full stacks
+      for (let i = 0; i < fullStacks; i++) {
+        createStack(10);
+      }
+
+      // Add remaining chips
+      if (remaining > 0) {
+        createStack(remaining);
+      }
     }
   }
-}
-
-function updatePot(amount) {
-  const potDisplay = document.getElementById("potChips");
-  renderChips(potDisplay, amount);
-}
-
-function updatePlayerBalance(seatId, balance) {
-  const seat = document.getElementById(seatId);
-  seat.querySelector(".balance").textContent = `$${balance}`;
-  renderChips(seat.querySelector(".chip-stack"), balance);
 }
 
 function createGame() {
@@ -128,6 +146,9 @@ socket.on("players_update", (game) => {
   console.log(game.players);
   const mainpot = game.pots?.[0]?.amount ?? 0;
   document.getElementById("potDisplay").textContent = `Pot: $${mainpot}`;
+
+  const potDisplay = document.getElementById("potChips");
+  renderChips(potDisplay, mainpot);
   const cardContainer = document.getElementById("community-cards");
   cardContainer.innerHTML = "";
 
@@ -160,6 +181,7 @@ socket.on("players_update", (game) => {
         sbBadge.hidden = !player.isSmallBlind;
         bbBadge.hidden = !player.isBigBlind;
         balance.textContent = `$${player.balance}`;
+        renderChips(seatDiv.querySelector(".chip-stack"), player.balance);
       } else {
         // Reset seat
         if (playerNameDiv) playerNameDiv.textContent = "";

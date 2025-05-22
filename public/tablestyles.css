@@ -203,13 +203,42 @@ button:hover {
 }
 
 .chip-stack {
+  position: absolute;
   display: flex;
-  flex-wrap: wrap;
-  gap: 2px;
-  max-width: 120px;
+  gap: 6px;
+  align-items: flex-end;
 }
 
-.chip-stack img {
-  width: 20px;
-  height: 20px;
+.chip-stack-top-left {
+  bottom: -50px;
+  right: -50px;
+}
+
+.chip-stack-top-right {
+  bottom: -50px;
+  left: -50px;
+}
+
+.chip-stack-bottom-right {
+  top: -50px;
+  left: -50px;
+}
+
+.chip-stack-bottom-left {
+  top: -50px;
+  right: -50px;
+}
+
+.chip-column {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: fit-content;
+}
+
+.chip-column img {
+  width: 128px;
+  height: 120px;
+  margin-top: -70px; /* 120px height - 2px spacing = -118px overlap */
 }
