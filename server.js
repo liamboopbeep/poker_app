@@ -6,7 +6,7 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-const Hand = require("pokersolver");
+const { Hand } = require("pokersolver");
 
 app.use(express.static("public"));
 
@@ -46,19 +46,58 @@ function getNextPhase(current) {
   return phases[idx + 1] || "showdown";
 }
 
+function handleShowdown(game) {
+  const playerHands = [];
+
+  game.players.forEach((player) => {
+    if (!player.folded && player.hand && player.hand.length === 2) {
+      const fullHand = [...player.hand, ...game.state.community_card];
+      const solvedHand = Hand.solve(fullHand);
+      solvedHand.playerId = player.id;
+      playerHands.push(solvedHand);
+    }
+  });
+  const winners = Hand.winners(playerHands);
+
+  console.log("Showdown winners:");
+  winners.forEach((winnerHand) => {
+    const winnerPlayer = game.players.find((p) => p.id === winnerHand.playerId);
+    console.log(`Player ${winnerPlayer.name} wins with hand: ${winnerHand.descr}`);
+  });
+}
+
 function checkStartNextRound(game, currentPlayer) {
   const activePlayers = game.players.filter((p) => !p.folded && !p.allIn);
-  const allCalled = activePlayers.every((p) => p.bet === game.state.highestbet);
   const lastRaiser = game.players.find((p) => p.id === game.state.lastRaiserId);
+  const allActed = activePlayers.every((p) => p.hasActed);
+  const allCalled = activePlayers.every((p) => p.bet === game.state.highestbet);
 
-  if (allCalled && currentPlayer.id === lastRaiser.id) {
+  let lastToCallPlayer = null;
+
+  if (lastRaiser) {
+    const raiserIndex = game.players.indexOf(lastRaiser);
+    const totalPlayers = game.players.length;
+
+    for (let i = 1; i < totalPlayers; i++) {
+      const idx = (raiserIndex + i) % totalPlayers;
+      const player = game.players[idx];
+      if (!player.folded && !player.allIn) {
+        lastToCallPlayer = player;
+      }
+      if (idx === raiserIndex) break; // completed full loop
+    }
+  }
+
+  const isLastToCall = !lastToCallPlayer || currentPlayer.id === lastToCallPlayer.id;
+
+  if (allCalled && isLastToCall && allActed) {
     game.players.forEach((player) => {
       player.bet = 0;
       player.isTurn = false;
+      player.hasActed = false;
     });
 
     game.state.highestbet = 0;
-    game.state.lastRaiserId = null;
 
     switch (game.state.phase) {
       case "preflop":
@@ -71,9 +110,6 @@ function checkStartNextRound(game, currentPlayer) {
         game.state.community_card.push(game.deck.pop());
         break;
       case "river":
-        game.state.community_card.push(game.deck.pop());
-        break;
-      case "showdown":
         return handleShowdown(game);
     }
     game.state.phase = getNextPhase(game.state.phase);
@@ -85,6 +121,7 @@ function checkStartNextRound(game, currentPlayer) {
       const nextIndex = (dealerIndex + i) % total;
       if (!game.players[nextIndex].folded && !game.players[nextIndex].allIn) {
         game.players[nextIndex].isTurn = true;
+        game.state.lastRaiserId = game.players[nextIndex].id;
         break;
       }
     }
@@ -106,26 +143,14 @@ function checkStartNextRound(game, currentPlayer) {
 function send_bet(code, player, bet) {
   const game = games[code];
   if (!game || !player || bet <= 0 || player.folded || player.balance < bet) return;
-
   player.balance -= bet;
   player.bet += bet;
-
-  if (bet < game.state.highestbet) {
-    game.pots[game.pots.length - 1].amount += bet;
-    // Create new side pot
-    const newPot = {
-      amount: 0,
-      contenders: game.players.filter((p) => !p.folded && p.balance > 0 && p.id !== player.id).map((p) => p.id),
-    };
-    game.pots.push(newPot);
-  } else {
-    game.pots[game.pots.length - 1].amount += bet;
-    if (bet > game.state.highestbet) {
-      game.state.highestbet = bet;
-    }
+  game.pots[0].amount += bet;
+  if (player.bet > game.state.highestbet) {
+    game.state.highestbet = player.bet;
   }
-
-  io.to(code).emit("players_update", game.players, game.state);
+  // Update players info
+  io.to(code).emit("players_update", game);
 }
 
 const minimalbet = 2;
@@ -226,6 +251,7 @@ io.on("connection", (socket) => {
       isBigBlind: false,
       isTurn: false,
       folded: false,
+      hasActed: false,
     };
 
     game.players.push(newPlayer);
@@ -289,7 +315,7 @@ io.on("connection", (socket) => {
 
         send_bet(code, game.players[smallBlindIndex], minimalbet / 2);
         send_bet(code, game.players[bigBlindIndex], minimalbet);
-        game.state.lastRaiserId = game.players[bigBlindIndex].id;
+        //game.state.lastRaiserId = game.players[bigBlindIndex].id;
       }
 
       io.to(code).emit("players_update", game);
@@ -314,7 +340,7 @@ io.on("connection", (socket) => {
     if (!game) return;
 
     const currentPlayer = game.players.find((p) => p.isTurn);
-
+    currentPlayer.hasActed = true;
     // Clear current turn and broadcast action
     send_bet(code, currentPlayer, game.state.highestbet - currentPlayer.bet);
     checkStartNextRound(game, currentPlayer);
@@ -327,7 +353,7 @@ io.on("connection", (socket) => {
     if (!game) return;
 
     const currentPlayer = game.players.find((p) => p.isTurn);
-
+    currentPlayer.hasActed = true;
     // Clear current turn and broadcast action
     send_bet(code, currentPlayer, game.state.highestbet - currentPlayer.bet + raiseAmount);
     game.state.minraise = raiseAmount;
@@ -355,6 +381,7 @@ io.on("connection", (socket) => {
 
     const currentPlayer = game.players.find((p) => p.isTurn);
     currentPlayer.folded = true;
+    currentPlayer.hasActed = true;
     checkStartNextRound(game, currentPlayer);
 
     io.to(code).emit("players_update", game);

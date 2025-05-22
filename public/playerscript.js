@@ -106,6 +106,8 @@ function debug() {
 function showRaiseControls() {
   const raiseControls = document.getElementById("raiseControls");
   raiseControls.style.display = "block";
+  syncRaiseSlider();
+  syncRaiseInput();
 }
 
 function syncRaiseInput() {

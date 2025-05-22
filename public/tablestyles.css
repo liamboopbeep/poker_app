@@ -139,3 +139,31 @@ button:hover {
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
   z-index: 2;
 }
+
+.card-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin: 0 auto;
+  padding: 10px;
+  position: relative;
+  top: 20px;
+}
+
+.card-row .card {
+  width: 40px;
+  height: 60px;
+  background-color: white;
+  border: 1px solid #333;
+  border-radius: 5px;
+  text-align: center;
+  line-height: 60px;
+  font-weight: bold;
+}
+
+.balance {
+  font-size: 0.9em;
+  color: #0c0;
+  margin-top: 5px;
+}

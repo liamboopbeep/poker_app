@@ -56,6 +56,15 @@ socket.on("players_update", (game) => {
   console.log(game.players);
   const mainpot = game.pots?.[0]?.amount ?? 0;
   document.getElementById("potDisplay").textContent = `Pot: $${mainpot}`;
+  const cardContainer = document.getElementById("community-cards");
+  cardContainer.innerHTML = "";
+
+  game.state.community_card.forEach((card) => {
+    const div = document.createElement("div");
+    div.className = "card";
+    div.textContent = card;
+    cardContainer.appendChild(div);
+  });
 
   seatIds.forEach((id, index) => {
     const seatDiv = document.getElementById(id);
@@ -67,6 +76,7 @@ socket.on("players_update", (game) => {
       const dealerBadge = seatDiv.querySelector(".dealer");
       const sbBadge = seatDiv.querySelector(".small-blind");
       const bbBadge = seatDiv.querySelector(".big-blind");
+      const balance = seatDiv.querySelector(".balance");
 
       if (player) {
         if (playerNameDiv) playerNameDiv.textContent = player.name;
@@ -77,6 +87,7 @@ socket.on("players_update", (game) => {
         dealerBadge.hidden = !player.isDealer;
         sbBadge.hidden = !player.isSmallBlind;
         bbBadge.hidden = !player.isBigBlind;
+        balance.textContent = `$${player.balance}`;
       } else {
         // Reset seat
         if (playerNameDiv) playerNameDiv.textContent = "";
