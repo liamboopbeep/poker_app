@@ -52,6 +52,41 @@ function startGame() {
   }
 }
 
+function playWinAnimation(seatId) {
+  const seat = document.getElementById(seatId);
+  if (!seat) return;
+
+  seat.classList.add("win-animation");
+
+  // Optional: remove animation class after it's done
+  setTimeout(() => {
+    seat.classList.remove("win-animation");
+  }, 3000); // Match the total animation duration (1s x 3)
+}
+
+socket.on("winner_update", (data) => {
+  const { name, description } = data;
+
+  const winnerBanner = document.createElement("div");
+  winnerBanner.className = "winner-banner";
+  winnerBanner.innerText = `${name} wins with ${description}`;
+  document.body.appendChild(winnerBanner);
+
+  setTimeout(() => {
+    winnerBanner.remove();
+  }, 6000); // Show for 6 seconds
+
+  // Match winner's name to a seat and trigger animation
+  seatIds.forEach((seatId) => {
+    const seatDiv = document.getElementById(seatId);
+    const playerNameDiv = seatDiv.querySelector(".player-name");
+
+    if (playerNameDiv && playerNameDiv.textContent === name) {
+      playWinAnimation(seatId);
+    }
+  });
+});
+
 socket.on("players_update", (game) => {
   console.log(game.players);
   const mainpot = game.pots?.[0]?.amount ?? 0;

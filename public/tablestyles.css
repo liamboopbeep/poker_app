@@ -95,6 +95,38 @@ button:hover {
   right: 50px;
 }
 
+@keyframes winGlow {
+  0% {
+    box-shadow: 0 0 5px 2px gold;
+  }
+  50% {
+    box-shadow: 0 0 20px 10px gold;
+  }
+  100% {
+    box-shadow: 0 0 5px 2px gold;
+  }
+}
+
+.player-seat.win-animation {
+  animation: winGlow 1s ease-in-out 3; /* 3 times, 1s each */
+  border: 2px solid gold;
+  border-radius: 10px;
+}
+
+.winner-banner {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: black;
+  color: gold;
+  padding: 10px 20px;
+  font-size: 1.2rem;
+  border-radius: 12px;
+  box-shadow: 0 0 10px gold;
+  z-index: 1000;
+}
+
 .badge {
   background-color: #ffd700;
   color: #000;
@@ -142,20 +174,22 @@ button:hover {
 
 .card-row {
   display: flex;
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   justify-content: center;
-  align-items: center;
   gap: 10px;
-  margin: 0 auto;
-  padding: 10px;
-  position: relative;
-  top: 20px;
+  margin-bottom: 10px;
+  z-index: 1;
 }
 
 .card-row .card {
   width: 40px;
   height: 60px;
   background-color: white;
-  border: 1px solid #333;
+  border: 3px solid #333;
+  color: #000;
   border-radius: 5px;
   text-align: center;
   line-height: 60px;
@@ -163,7 +197,7 @@ button:hover {
 }
 
 .balance {
-  font-size: 0.9em;
-  color: #0c0;
+  font-size: 1em;
+  color: rgb(255, 255, 255);
   margin-top: 5px;
 }

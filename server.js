@@ -41,12 +41,12 @@ function dealHands(game) {
 }
 
 function getNextPhase(current) {
-  const phases = ["preflop", "flop", "turn", "river", "showdown"];
+  const phases = ["preflop", "flop", "turn", "river"];
   const idx = phases.indexOf(current);
-  return phases[idx + 1] || "showdown";
+  return phases[idx + 1] || "river";
 }
 
-function handleShowdown(game) {
+function handleShowdown(game, code) {
   const playerHands = [];
 
   game.players.forEach((player) => {
@@ -59,14 +59,54 @@ function handleShowdown(game) {
   });
   const winners = Hand.winners(playerHands);
 
-  console.log("Showdown winners:");
+  // Split pot among winners
+  const potAmount = game.pots[0].amount; //.reduce((sum, pot) => sum + pot.amount, 0);
+  const splitAmount = Math.floor(potAmount / winners.length);
+
   winners.forEach((winnerHand) => {
     const winnerPlayer = game.players.find((p) => p.id === winnerHand.playerId);
-    console.log(`Player ${winnerPlayer.name} wins with hand: ${winnerHand.descr}`);
+    winnerPlayer.balance += splitAmount;
+    io.to(code).emit("winner_update", {
+      name: winnerPlayer.name,
+      description: winnerHand.descr,
+    });
   });
+
+  // Rotate dealer
+  const currentDealerIndex = game.players.findIndex((p) => p.isDealer);
+  const nextDealerIndex = (currentDealerIndex + 1) % game.players.length;
+
+  // Reset game for next round after short delay
+  setTimeout(() => {
+    game.players.forEach((player) => {
+      player.hand = [];
+      player.bet = 0;
+      player.isDealer = false;
+      player.isSmallBlind = false;
+      player.isBigBlind = false;
+      player.isTurn = false;
+      player.folded = false;
+      player.hasActed = false;
+      player.allIn = false;
+    });
+
+    game.pots = [];
+    game.state = {
+      phase: "preflop",
+      highestbet: 0,
+      minraise: 1,
+      lastRaiserId: "",
+      community_card: [],
+    };
+
+    game.players[nextDealerIndex].isDealer = true;
+    io.to(code).emit("players_update", game);
+    // optionally, auto-start next hand:
+    // socket.emit("start_game", code);
+  }, 5000); // wait 5 seconds before resetting
 }
 
-function checkStartNextRound(game, currentPlayer) {
+function checkStartNextRound(game, currentPlayer, code) {
   const activePlayers = game.players.filter((p) => !p.folded && !p.allIn);
   const lastRaiser = game.players.find((p) => p.id === game.state.lastRaiserId);
   const allActed = activePlayers.every((p) => p.hasActed);
@@ -110,7 +150,7 @@ function checkStartNextRound(game, currentPlayer) {
         game.state.community_card.push(game.deck.pop());
         break;
       case "river":
-        return handleShowdown(game);
+        return handleShowdown(game, code);
     }
     game.state.phase = getNextPhase(game.state.phase);
     // Determine the first active player to the left of the dealer
@@ -287,7 +327,8 @@ io.on("connection", (socket) => {
       const totalPlayers = game.players.length;
 
       // Assign Dealer
-      const dealerIndex = 0;
+      const existingDealerIndex = game.players.findIndex((p) => p.isDealer);
+      const dealerIndex = existingDealerIndex !== -1 ? existingDealerIndex : 0;
       const dealer = game.players[dealerIndex];
       dealer.isDealer = true;
 
@@ -303,7 +344,6 @@ io.on("connection", (socket) => {
 
         send_bet(code, game.players[dealerIndex], minimalbet / 2);
         send_bet(code, game.players[bigBlindIndex], minimalbet);
-        game.state.lastRaiserId = game.players[bigBlindIndex].id;
       } else {
         const smallBlindIndex = (dealerIndex + 1) % totalPlayers;
         const bigBlindIndex = (dealerIndex + 2) % totalPlayers;
@@ -315,7 +355,6 @@ io.on("connection", (socket) => {
 
         send_bet(code, game.players[smallBlindIndex], minimalbet / 2);
         send_bet(code, game.players[bigBlindIndex], minimalbet);
-        //game.state.lastRaiserId = game.players[bigBlindIndex].id;
       }
 
       io.to(code).emit("players_update", game);
@@ -343,7 +382,7 @@ io.on("connection", (socket) => {
     currentPlayer.hasActed = true;
     // Clear current turn and broadcast action
     send_bet(code, currentPlayer, game.state.highestbet - currentPlayer.bet);
-    checkStartNextRound(game, currentPlayer);
+    checkStartNextRound(game, currentPlayer, code);
 
     io.to(code).emit("players_update", game);
   });
@@ -358,7 +397,7 @@ io.on("connection", (socket) => {
     send_bet(code, currentPlayer, game.state.highestbet - currentPlayer.bet + raiseAmount);
     game.state.minraise = raiseAmount;
     game.state.lastRaiserId = currentPlayer.id;
-    checkStartNextRound(game, currentPlayer);
+    checkStartNextRound(game, currentPlayer, code);
 
     io.to(code).emit("players_update", game);
   });
@@ -370,7 +409,7 @@ io.on("connection", (socket) => {
     const currentPlayer = game.players.find((p) => p.isTurn);
     send_bet(code, currentPlayer, currentPlayer.balance);
     currentPlayer.allIn = true;
-    checkStartNextRound(game, currentPlayer);
+    checkStartNextRound(game, currentPlayer, code);
 
     io.to(code).emit("players_update", game);
   });
@@ -382,7 +421,7 @@ io.on("connection", (socket) => {
     const currentPlayer = game.players.find((p) => p.isTurn);
     currentPlayer.folded = true;
     currentPlayer.hasActed = true;
-    checkStartNextRound(game, currentPlayer);
+    checkStartNextRound(game, currentPlayer, code);
 
     io.to(code).emit("players_update", game);
   });
