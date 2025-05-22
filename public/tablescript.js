@@ -1,6 +1,16 @@
 const socket = io();
 const seatIds = ["seat-top-left", "seat-top-right", "seat-bottom-right", "seat-bottom-left"];
 
+const CHIP_VALUES = [
+  { value: 200, img: "black_chip.png" },
+  { value: 100, img: "white_chip.png" },
+  { value: 50, img: "yellow_chip.png" },
+  { value: 25, img: "pink_chip.png" },
+  { value: 10, img: "red_chip.png" },
+  { value: 5, img: "green_chip.png" },
+  { value: 1, img: "blue_chip.png" },
+];
+
 let currentGameCode = null;
 
 window.addEventListener("load", () => {
@@ -21,6 +31,33 @@ window.addEventListener("load", () => {
     });
   }
 });
+
+function renderChips(container, amount) {
+  container.innerHTML = ""; // Clear previous chips
+
+  for (const chip of CHIP_VALUES) {
+    const count = Math.floor(amount / chip.value);
+    amount %= chip.value;
+
+    for (let i = 0; i < count; i++) {
+      const img = document.createElement("img");
+      img.src = `/images/${chip.img}`;
+      img.alt = chip.value;
+      container.appendChild(img);
+    }
+  }
+}
+
+function updatePot(amount) {
+  const potDisplay = document.getElementById("potChips");
+  renderChips(potDisplay, amount);
+}
+
+function updatePlayerBalance(seatId, balance) {
+  const seat = document.getElementById(seatId);
+  seat.querySelector(".balance").textContent = `$${balance}`;
+  renderChips(seat.querySelector(".chip-stack"), balance);
+}
 
 function createGame() {
   socket.emit("create_game", (code) => {

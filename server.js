@@ -308,6 +308,11 @@ io.on("connection", (socket) => {
     if (game && game.players.length >= 2) {
       console.log("game start!");
       dealHands(game);
+
+      const existingDealerIndex = game.players.findIndex((p) => p.isDealer);
+      const dealerIndex = existingDealerIndex !== -1 ? existingDealerIndex : 0;
+      const dealer = game.players[dealerIndex];
+
       // Clear previous roles
       game.players.forEach((p) => {
         p.isDealer = false;
@@ -327,9 +332,6 @@ io.on("connection", (socket) => {
       const totalPlayers = game.players.length;
 
       // Assign Dealer
-      const existingDealerIndex = game.players.findIndex((p) => p.isDealer);
-      const dealerIndex = existingDealerIndex !== -1 ? existingDealerIndex : 0;
-      const dealer = game.players[dealerIndex];
       dealer.isDealer = true;
 
       if (totalPlayers === 2) {

@@ -115,20 +115,20 @@ button:hover {
 
 .winner-banner {
   position: absolute;
-  top: 20px;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
-  background-color: black;
-  color: gold;
+  transform: translate(-50%, -50%);
+  background-color: rgb(17, 7, 61);
+  color: rgb(199, 172, 20);
   padding: 10px 20px;
-  font-size: 1.2rem;
+  font-size: 5rem;
   border-radius: 12px;
   box-shadow: 0 0 10px gold;
   z-index: 1000;
 }
 
 .badge {
-  background-color: #ffd700;
+  background-color: rgb(199, 172, 20);
   color: #000;
   padding: 5px;
   border-radius: 5px;
@@ -200,4 +200,16 @@ button:hover {
   font-size: 1em;
   color: rgb(255, 255, 255);
   margin-top: 5px;
+}
+
+.chip-stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  max-width: 120px;
+}
+
+.chip-stack img {
+  width: 20px;
+  height: 20px;
 }
