@@ -76,6 +76,8 @@ button:hover {
   text-align: center;
   z-index: 3;
   transition: opacity 0.3s ease;
+  width: 110px; /* example value */
+  height: 50px;
 }
 
 #seat-top-left {
@@ -203,30 +205,41 @@ button:hover {
 }
 
 .chip-stack {
+  width: 180px; /* Adjust based on expected chip rows */
+  height: 200px; /* Enough to hold multiple rows */
   position: absolute;
   display: flex;
-  gap: 6px;
-  align-items: flex-end;
+  flex-direction: column;
+  gap: 32px;
+  align-items: center;
+  justify-content: center;
+  transform: translate(-50%, -50%); */
 }
 
 .chip-stack-top-left {
-  bottom: -50px;
-  right: -50px;
+  left: 100%;
+  top: 100%;
 }
 
 .chip-stack-top-right {
-  bottom: -50px;
-  left: -50px;
-}
-
-.chip-stack-bottom-right {
-  top: -50px;
-  left: -50px;
+  right: 100%;
+  top: 100%;
 }
 
 .chip-stack-bottom-left {
-  top: -50px;
-  right: -50px;
+  left: 100%;
+  bottom: 60%;
+}
+
+.chip-stack-bottom-right {
+  right: 100%;
+  bottom: 100%;
+}
+
+.chip-row {
+  display: flex;
+  gap: 36px;
+  margin-bottom: 10px;
 }
 
 .chip-column {
@@ -235,10 +248,4 @@ button:hover {
   flex-direction: column;
   align-items: center;
   height: fit-content;
-}
-
-.chip-column img {
-  width: 128px;
-  height: 120px;
-  margin-top: -70px; /* 120px height - 2px spacing = -118px overlap */
 }

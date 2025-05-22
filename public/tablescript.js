@@ -36,6 +36,12 @@ function renderChips(container, amount) {
   if (container) {
     container.innerHTML = "";
 
+    let columnBuffer = []; // Temporarily hold up to 4 columns
+    let columnsInRow = 0;
+    let rowContainer = document.createElement("div");
+    rowContainer.className = "chip-row";
+    container.appendChild(rowContainer);
+
     for (const chip of CHIP_VALUES) {
       let count = Math.floor(amount / chip.value);
       amount %= chip.value;
@@ -43,33 +49,38 @@ function renderChips(container, amount) {
       let fullStacks = Math.floor(count / 10);
       let remaining = count % 10;
 
-      // Helper to create a single stack of up to 10 chips
       const createStack = (chipCount) => {
         const column = document.createElement("div");
         column.className = "chip-column";
-        column.style.position = "relative";
 
         for (let j = 0; j < chipCount; j++) {
           const img = document.createElement("img");
           img.src = `/img/${chip.img}`;
           img.alt = chip.value;
           img.style.position = "absolute";
-          img.style.top = `-${j * 5}px`; // Overlap each chip by 2px
+          img.style.top = `-${j * 5}px`; // 2px visible spacing
           img.style.zIndex = j + 1;
           img.style.width = "32px";
           img.style.height = "30px";
           column.appendChild(img);
         }
 
-        container.appendChild(column);
+        // Add column to current row
+        rowContainer.appendChild(column);
+        columnsInRow++;
+
+        // Start new row after 4 columns
+        if (columnsInRow >= 4) {
+          rowContainer = document.createElement("div");
+          rowContainer.className = "chip-row";
+          container.appendChild(rowContainer);
+          columnsInRow = 0;
+        }
       };
 
-      // Add full stacks
       for (let i = 0; i < fullStacks; i++) {
         createStack(10);
       }
-
-      // Add remaining chips
       if (remaining > 0) {
         createStack(remaining);
       }
