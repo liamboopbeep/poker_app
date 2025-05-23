@@ -474,50 +474,6 @@ io.on("connection", (socket) => {
     callback(game);
   });
 
-  socket.on("manual_winner", (code, winnerId) => {
-    const game = games[code];
-    if (!game) return;
-
-    const potAmount = game.pots[0].amount;
-    const winnerPlayer = game.players.find((p) => p.id === winnerId);
-
-    if (!winnerPlayer) return;
-
-    winnerPlayer.balance += potAmount;
-    io.to(code).emit("winner_update", {
-      name: winnerPlayer.name,
-      description: "Winner selected manually",
-    });
-
-    resetGame(game, code);
-  });
-
-  socket.on("manual_split_pot", (code, winnerIds) => {
-    const game = games[code];
-    if (!game || !Array.isArray(winnerIds) || winnerIds.length === 0) return;
-
-    const potAmount = game.pots[0].amount;
-    const splitAmount = Math.floor(potAmount / winnerIds.length);
-
-    for (const id of winnerIds) {
-      const player = game.players.find((p) => p.id === id);
-      if (player) {
-        player.balance += splitAmount;
-      }
-    }
-
-    io.to(code).emit("manual_split_result", {
-      winners: winnerIds
-        .map((id) => {
-          const player = game.players.find((p) => p.id === id);
-          return player ? { id, name: player.name } : null;
-        })
-        .filter(Boolean),
-      amountEach: splitAmount,
-    });
-
-    resetGame(game, code);
-  });
 
   socket.on("winner_confirmed", ({ code, winners, amount }) => {
     const game = games[code];
