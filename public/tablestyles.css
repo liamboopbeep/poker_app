@@ -79,8 +79,8 @@ button:hover {
   text-align: center;
   z-index: 3;
   transition: opacity 0.3s ease;
-  width: 110px; /* example value */
-  height: 50px;
+  width: 5%; /* example value */
+  height: 5%;
 }
 
 #seat-top-left {
@@ -307,8 +307,8 @@ button:hover {
 
 .goldring {
   position: absolute;
-  width: 1600px; /* Adjust based on expected chip rows */
-  height: 600px; /* Enough to hold multiple rows */
+  width: 74%; /* Adjust based on expected chip rows */
+  height: 72%; /* Enough to hold multiple rows */
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
@@ -318,8 +318,8 @@ button:hover {
 
 .goldringdotted {
   position: absolute;
-  width: 1580px; /* Adjust based on expected chip rows */
-  height: 580px; /* Enough to hold multiple rows */
+  width: 95%; /* Adjust based on expected chip rows */
+  height: 92%; /* Enough to hold multiple rows */
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
