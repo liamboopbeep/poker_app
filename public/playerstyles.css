@@ -60,6 +60,18 @@ body {
   color: white;
 }
 
+.allin {
+  background-color: #8f0783; /* Green background */
+  font-size: 16px; /* Medium font size */
+  padding: 10px 20px; /* Padding for clickable area */
+  border: none; /* No default border */
+  border-radius: 8px; /* Rounded corners */
+  cursor: pointer; /* Pointer on hover */
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); /* Subtle shadow */
+  margin-top: 10px;
+}
+
 .conraise {
   background-color: #8f0783; /* Green background */
   font-size: 16px; /* Medium font size */

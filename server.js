@@ -135,12 +135,18 @@ function handleShowdown(game, code) {
 }
 
 function checkStartNextRound(game, currentPlayer, code) {
+  currentPlayer.isTurn = false;
   const activePlayers = game.players.filter((p) => !p.folded && !p.allIn);
   const lastRaiser = game.players.find((p) => p.id === game.state.lastRaiserId);
   const allActed = activePlayers.every((p) => p.hasActed);
   const allCalled = activePlayers.every((p) => p.bet === game.state.highestbet);
 
   let lastToCallPlayer = null;
+
+  if (activePlayers.length === 0) {
+    io.to(code).emit("players_update", game);
+    return handleShowdown(game, code);
+  }
 
   if (lastRaiser) {
     const raiserIndex = game.players.indexOf(lastRaiser);
@@ -198,7 +204,6 @@ function checkStartNextRound(game, currentPlayer, code) {
       }
     }
   } else {
-    currentPlayer.isTurn = false;
     // get index of current player
     let nextIndex = game.players.indexOf(currentPlayer);
     const totalPlayers = game.players.length;

@@ -64,6 +64,7 @@ socket.on("players_update", (game) => {
 
       document.querySelector("#playerInfo .player-name").textContent = me.name;
       document.querySelector("#playerInfo .balance").textContent = `Balance: $${me.balance}`;
+      document.querySelector("#playerInfo .bet").textContent = `Bet: $${me.whole_game_bet}`;
       document.querySelector("#playerInfo .dealer").hidden = !me.isDealer;
       document.querySelector("#playerInfo .small-blind").hidden = !me.isSmallBlind;
       document.querySelector("#playerInfo .big-blind").hidden = !me.isBigBlind;
