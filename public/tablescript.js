@@ -12,7 +12,7 @@ const CHIP_VALUES = [
 ];
 
 let currentGameCode = null;
-let lastPhase = null;
+let lastPhase = "preflop";
 
 window.addEventListener("load", () => {
   const urlParams = new URLSearchParams(window.location.search);

@@ -50,7 +50,6 @@ function resetGame(game, code) {
 
     game.pot = 0;
     game.state = {
-      phase: "preflop",
       highestbet: 0,
       minraise: 1,
       lastRaiserId: "",
@@ -357,6 +356,7 @@ io.on("connection", (socket) => {
       const dealer = game.players[dealerIndex];
 
       // Clear previous roles
+      game.state.phase = "preflop";
       game.players.forEach((p) => {
         p.isDealer = false;
         p.isSmallBlind = false;
