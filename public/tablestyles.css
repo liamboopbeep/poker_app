@@ -35,9 +35,12 @@ button:hover {
 }
 
 #tableContainer {
-  position: relative;
-  width: 2300px;
-  height: 1000px;
+  position: absolute;
+  width: 80%;
+  height: 75%;
+  top: 55%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   margin: auto;
 }
 
