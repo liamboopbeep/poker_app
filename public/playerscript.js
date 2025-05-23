@@ -120,7 +120,7 @@ function syncRaiseInput() {
   const input = document.getElementById("raiseInput");
   const total = document.querySelector("#raiseControls .total");
   const text = document.querySelector("#raiseControls .amount_to_call").textContent;
-  const amountToCall = parseInt(text.split(":")[1].trim());
+  const amountToCall = parseInt(text.split(":")[1].replace("$", "").trim());
   const raiseButton = document.querySelector("#raiseControls button");
 
   let value = parseInt(slider.value);
@@ -139,7 +139,7 @@ function syncRaiseSlider() {
   const input = document.getElementById("raiseInput");
   const total = document.querySelector("#raiseControls .total");
   const text = parseInt(document.querySelector("#raiseControls .amount_to_call").textContent);
-  const amountToCall = parseInt(text.split(":")[1].trim());
+  const amountToCall = parseInt(text.split(":")[1].replace("$", "").trim());
   const raiseButton = document.querySelector("#raiseControls button");
 
   let value = parseInt(input.value);
