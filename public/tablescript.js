@@ -12,6 +12,7 @@ const CHIP_VALUES = [
 ];
 
 let currentGameCode = null;
+let lastPhase = null;
 
 window.addEventListener("load", () => {
   const urlParams = new URLSearchParams(window.location.search);
@@ -32,11 +33,25 @@ window.addEventListener("load", () => {
   }
 });
 
+function showEventBanner(text) {
+  const banner = document.getElementById("eventBanner");
+  const textSpan = banner.querySelector(".banner-text");
+
+  textSpan.textContent = text;
+  banner.classList.remove("hidden");
+  banner.style.animation = "slideInBanner 1s ease-out forwards";
+  textSpan.style.animation = "textSlideIn 2s";
+
+  setTimeout(() => {
+    banner.style.animation = "";
+    textSpan.style.animation = "";
+    banner.classList.add("hidden");
+  }, 3000);
+}
+
 function renderChips(container, amount) {
   if (container) {
     container.innerHTML = "";
-
-    let columnBuffer = []; // Temporarily hold up to 4 columns
     let columnsInRow = 0;
     let rowContainer = document.createElement("div");
     rowContainer.className = "chip-row";
@@ -114,20 +129,38 @@ function createGame() {
 
 function startGame() {
   if (currentGameCode) {
+    showEventBanner("PREFLOP");
     socket.emit("start_game", currentGameCode);
   }
 }
 
-function playWinAnimation(seatId) {
-  const seat = document.getElementById(seatId);
-  if (!seat) return;
+function showEventBanner(text) {
+  const banner = document.getElementById("eventBanner");
+  const textSpan = banner.querySelector(".banner-text");
 
-  seat.classList.add("win-animation");
+  // Reset styles
+  banner.classList.remove("hidden");
+  banner.style.animation = "slideInBanner 0.6s ease-in-out forwards";
+  textSpan.textContent = text;
+  textSpan.style.animation = "";
 
-  // Optional: remove animation class after it's done
+  // Delay text entry until banner finishes
   setTimeout(() => {
-    seat.classList.remove("win-animation");
-  }, 3000); // Match the total animation duration (1s x 3)
+    textSpan.style.animation = "textSlideIn 0.6s ease-out forwards";
+  }, 1000);
+
+  // Start exit animations after delay
+  setTimeout(() => {
+    textSpan.style.animation = "textSlideOut 0.1s ease-in forwards";
+    banner.style.animation = "slideOutBanner 0.3s ease-in forwards";
+  }, 2000);
+
+  // Clean up and hide
+  setTimeout(() => {
+    banner.classList.add("hidden");
+    banner.style.animation = "";
+    textSpan.style.animation = "";
+  }, 3200);
 }
 
 socket.on("winner_update", (data) => {
@@ -156,10 +189,22 @@ socket.on("winner_update", (data) => {
 socket.on("players_update", (game) => {
   console.log(game.players);
   const mainpot = game.pots?.[0]?.amount ?? 0;
+
+  const table = document.getElementById("table");
   document.getElementById("potDisplay").textContent = `Pot: $${mainpot}`;
 
-  const potDisplay = document.getElementById("potChips");
+  const potDisplay = table.querySelector(".chip-stack");
+
   renderChips(potDisplay, mainpot);
+
+  // Show banner if phase changed
+  const currentPhase = game.state.phase;
+  console.log(currentPhase);
+  if (currentPhase !== lastPhase && currentPhase !== undefined) {
+    showEventBanner(currentPhase.toUpperCase());
+    lastPhase = currentPhase;
+  }
+
   const cardContainer = document.getElementById("community-cards");
   cardContainer.innerHTML = "";
 

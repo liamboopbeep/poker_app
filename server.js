@@ -30,6 +30,37 @@ function createShuffledDeck() {
   return deck;
 }
 
+function resetGame(game, code) {
+  const currentDealerIndex = game.players.findIndex((p) => p.isDealer);
+  const nextDealerIndex = (currentDealerIndex + 1) % game.players.length;
+
+  setTimeout(() => {
+    game.players.forEach((player) => {
+      player.hand = [];
+      player.bet = 0;
+      player.isDealer = false;
+      player.isSmallBlind = false;
+      player.isBigBlind = false;
+      player.isTurn = false;
+      player.folded = false;
+      player.hasActed = false;
+      player.allIn = false;
+    });
+
+    game.pots = [];
+    game.state = {
+      phase: "preflop",
+      highestbet: 0,
+      minraise: 1,
+      lastRaiserId: "",
+      community_card: [],
+    };
+
+    game.players[nextDealerIndex].isDealer = true;
+    io.to(code).emit("players_update", game);
+  }, 5000);
+}
+
 function dealHands(game) {
   const deck = createShuffledDeck();
   game.deck = deck; // save for community cards later
@@ -71,39 +102,7 @@ function handleShowdown(game, code) {
       description: winnerHand.descr,
     });
   });
-
-  // Rotate dealer
-  const currentDealerIndex = game.players.findIndex((p) => p.isDealer);
-  const nextDealerIndex = (currentDealerIndex + 1) % game.players.length;
-
-  // Reset game for next round after short delay
-  setTimeout(() => {
-    game.players.forEach((player) => {
-      player.hand = [];
-      player.bet = 0;
-      player.isDealer = false;
-      player.isSmallBlind = false;
-      player.isBigBlind = false;
-      player.isTurn = false;
-      player.folded = false;
-      player.hasActed = false;
-      player.allIn = false;
-    });
-
-    game.pots = [];
-    game.state = {
-      phase: "preflop",
-      highestbet: 0,
-      minraise: 1,
-      lastRaiserId: "",
-      community_card: [],
-    };
-
-    game.players[nextDealerIndex].isDealer = true;
-    io.to(code).emit("players_update", game);
-    // optionally, auto-start next hand:
-    // socket.emit("start_game", code);
-  }, 5000); // wait 5 seconds before resetting
+  resetGame(game, code);
 }
 
 function checkStartNextRound(game, currentPlayer, code) {
@@ -435,6 +434,51 @@ io.on("connection", (socket) => {
       return callback(`Game ${code} not found`);
     }
     callback(game);
+  });
+
+  socket.on("manual_winner", (code, winnerId) => {
+    const game = games[code];
+    if (!game) return;
+
+    const potAmount = game.pots[0].amount;
+    const winnerPlayer = game.players.find((p) => p.id === winnerId);
+
+    if (!winnerPlayer) return;
+
+    winnerPlayer.balance += potAmount;
+    io.to(code).emit("winner_update", {
+      name: winnerPlayer.name,
+      description: "Winner selected manually",
+    });
+
+    resetGame(game, code);
+  });
+
+  socket.on("manual_split_pot", (code, winnerIds) => {
+    const game = games[code];
+    if (!game || !Array.isArray(winnerIds) || winnerIds.length === 0) return;
+
+    const potAmount = game.pots[0].amount;
+    const splitAmount = Math.floor(potAmount / winnerIds.length);
+
+    for (const id of winnerIds) {
+      const player = game.players.find((p) => p.id === id);
+      if (player) {
+        player.balance += splitAmount;
+      }
+    }
+
+    io.to(code).emit("manual_split_result", {
+      winners: winnerIds
+        .map((id) => {
+          const player = game.players.find((p) => p.id === id);
+          return player ? { id, name: player.name } : null;
+        })
+        .filter(Boolean),
+      amountEach: splitAmount,
+    });
+
+    resetGame(game, code);
   });
 });
 

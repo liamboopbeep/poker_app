@@ -161,7 +161,7 @@ button:hover {
 
 #potDisplay {
   position: absolute;
-  top: 50%;
+  bottom: 35%;
   left: 50%;
   transform: translate(-50%, -50%);
   background-color: #222;
@@ -177,7 +177,7 @@ button:hover {
 .card-row {
   display: flex;
   position: absolute;
-  top: 40%;
+  top: 30%;
   left: 50%;
   transform: translate(-50%, -50%);
   justify-content: center;
@@ -204,6 +204,33 @@ button:hover {
   margin-top: 5px;
 }
 
+#potChips {
+  position: relative;
+  width: 160px; /* Adjust based on how many columns you expect */
+  height: 120px; /* Adjust for number of rows */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px; /* vertical spacing between rows */
+  transform: translate(-50%, -50%); /* center it inside #potDisplay */
+}
+
+/* Each row inside pot chip stack */
+#potChips .chip-row {
+  display: flex;
+  justify-content: center;
+  gap: 36px;
+}
+
+/* Each column of chips */
+#potChips .chip-column {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .chip-stack {
   width: 180px; /* Adjust based on expected chip rows */
   height: 200px; /* Enough to hold multiple rows */
@@ -213,27 +240,30 @@ button:hover {
   gap: 32px;
   align-items: center;
   justify-content: center;
-  transform: translate(-50%, -50%);
 }
 
 .chip-stack-top-left {
-  left: 100%;
-  top: 100%;
+  left: 130%;
+  top: 130%;
+  transform: translate(-50%, -50%);
 }
 
 .chip-stack-top-right {
-  right: 100%;
-  top: 100%;
+  right: 130%;
+  top: 130%;
+  transform: translate(50%, -50%);
 }
 
 .chip-stack-bottom-left {
-  left: 100%;
-  bottom: 60%;
+  left: 130%;
+  bottom: 130%;
+  transform: translate(-50%, 50%);
 }
 
 .chip-stack-bottom-right {
-  right: 100%;
-  bottom: 100%;
+  right: 130%;
+  bottom: 130%;
+  transform: translate(50%, 50%);
 }
 
 .chip-row {
@@ -248,4 +278,115 @@ button:hover {
   flex-direction: column;
   align-items: center;
   height: fit-content;
+}
+
+.goldring {
+  position: absolute;
+  width: 1600px; /* Adjust based on expected chip rows */
+  height: 600px; /* Enough to hold multiple rows */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 2px solid gold;
+  border-radius: 400px;
+}
+
+.goldringdotted {
+  position: absolute;
+  width: 1580px; /* Adjust based on expected chip rows */
+  height: 580px; /* Enough to hold multiple rows */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 2px solid gold;
+  border-radius: 360px;
+  border-style: dashed;
+}
+
+#table > #potChips {
+  position: absolute;
+  width: 1200px; /* Adjust based on expected chip rows */
+  height: 700px; /* Enough to hold multiple rows */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 4px;
+}
+
+.event-banner {
+  position: fixed;
+  top: 47%;
+  width: 100%;
+  height: 80px;
+  line-height: 80px;
+  transform: translateX(-100%);
+  background: #19194d;
+  border: 1px solid gold;
+  color: white;
+  font-size: 2.5rem;
+  font-weight: bold;
+  text-align: center;
+  z-index: 9999;
+  opacity: 0;
+}
+
+.banner-text {
+  display: inline-block;
+  padding-left: 100px;
+  padding-right: 100px;
+  opacity: 0;
+}
+
+/* Entry animation for banner */
+@keyframes slideInBanner {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Entry animation for text (delayed effect) */
+@keyframes textSlideIn {
+  0% {
+    padding-left: 150px;
+    padding-right: 0;
+    opacity: 0;
+  }
+  100% {
+    padding-left: 40px;
+    padding-right: 40px;
+    opacity: 1;
+  }
+}
+
+/* Exit animation for banner */
+@keyframes slideOutBanner {
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+/* Exit animation for text */
+@keyframes textSlideOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    padding-left: 160px;
+    padding-right: 0;
+  }
+}
+
+.hidden {
+  display: none;
 }
