@@ -41,7 +41,6 @@ socket.on("players_update", (game) => {
       const buttons = actionsEl.querySelectorAll("button");
       const checkbutton = actionsEl.querySelector(".check");
       const raiseButton = actionsEl.querySelector(".raise");
-      const callButton = actionsEl.querySelector(".call");
       const allinButton = actionsEl.querySelector(".allin");
 
       buttons.forEach((btn) => {
@@ -53,13 +52,14 @@ socket.on("players_update", (game) => {
       }
 
       if (me.balance + me.bet <= game.state.highestbet) {
-        if (callButton) callButton.style.display = "none";
-        if (raiseButton) raiseButton.style.display = "none";
-        if (allinButton) allinButton.style.display = "inline-block";
+        checkbutton.style.display = "none";
+        raiseButton.style.display = "none";
+        allinButton.style.display = "inline-block";
+        allinButton.textContent = `ALL IN FOR ${me.whole_game_bet + me.balance}`;
       } else {
-        if (callButton) callButton.style.display = "inline-block";
-        if (raiseButton) raiseButton.style.display = "inline-block";
-        if (allinButton) allinButton.style.display = "none";
+        checkbutton.style.display = "inline-block";
+        raiseButton.style.display = "inline-block";
+        allinButton.style.display = "none";
       }
 
       document.querySelector("#playerInfo .player-name").textContent = me.name;
