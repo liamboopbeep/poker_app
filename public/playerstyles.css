@@ -60,7 +60,7 @@ body {
   color: white;
 }
 
-#conraise {
+.conraise {
   background-color: #8f0783; /* Green background */
   font-size: 16px; /* Medium font size */
   padding: 10px 20px; /* Padding for clickable area */
@@ -72,8 +72,8 @@ body {
   margin-top: 10px;
 }
 
-#conraise:hover {
-  background-color: #218838; /* Darker green on hover */
+.conraise:hover {
+  background-color: #882151; /* Darker green on hover */
   transform: scale(1.05); /* Slight grow effect */
 }
 
@@ -152,4 +152,34 @@ button.raise:hover {
 .badge.big-blind {
   bottom: 10px;
   left: 10px;
+}
+
+input[type="range"] {
+  height: 8px; /* makes the track thicker */
+  -webkit-appearance: none; /* necessary for custom styling */
+  background: #00cec9;
+  border-radius: 5px;
+  outline: none;
+}
+
+/* Webkit (Chrome, Safari, Edge) */
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 24px;
+  width: 24px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid #00cec9;
+  cursor: pointer;
+  margin-top: -8px; /* aligns thumb vertically */
+}
+
+/* Firefox */
+input[type="range"]::-moz-range-thumb {
+  height: 24px;
+  width: 24px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid #00cec9;
+  cursor: pointer;
 }
