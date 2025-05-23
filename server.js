@@ -33,8 +33,8 @@ function createShuffledDeck() {
 function resetGame(code) {
   const game = games[code];
   const currentDealerIndex = game.players.findIndex((p) => p.isDealer);
-  if (!currentDealerIndex){
-    currentDealerIndex = 0;
+  if (currentDealerIndex === -1){
+    return;
   }
   const nextDealerIndex = (currentDealerIndex + 1) % game.players.length;
 
