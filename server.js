@@ -30,8 +30,12 @@ function createShuffledDeck() {
   return deck;
 }
 
-function resetGame(game, code) {
+function resetGame(code) {
+  const game = games[code];
   const currentDealerIndex = game.players.findIndex((p) => p.isDealer);
+  if (!currentDealerIndex){
+    currentDealerIndex = 0;
+  }
   const nextDealerIndex = (currentDealerIndex + 1) % game.players.length;
 
   setTimeout(() => {
@@ -58,7 +62,7 @@ function resetGame(game, code) {
 
     game.players[nextDealerIndex].isDealer = true;
     io.to(code).emit("players_update", game);
-  }, 5000);
+  }, 2000);
 }
 
 function dealHands(game) {
@@ -129,8 +133,6 @@ function handleShowdown(game, code) {
       });
     });
   }
-
-  resetGame(game, code);
 }
 
 function checkStartNextRound(game, currentPlayer, code) {
@@ -346,6 +348,7 @@ io.on("connection", (socket) => {
 
   socket.on("start_game", (code) => {
     const game = games[code];
+    resetGame(code);
     if (game && game.players.length >= 2) {
       console.log("game start!");
       if (!game.PhysicalDeck) {
@@ -493,8 +496,6 @@ io.on("connection", (socket) => {
 
     if (game.pot > 0) {
       io.to(code).emit("choose_winner", game.pot); // Ask for next manual winner
-    } else {
-      resetGame(game, code);
     }
 
     io.to(code).emit("players_update", game);
