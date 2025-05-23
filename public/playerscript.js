@@ -49,7 +49,7 @@ socket.on("players_update", (game) => {
       });
 
       if (checkbutton && me && game.state.highestbet) {
-        checkbutton.textContent = me.bet === game.state.highestbet ? "Check" : "Call";
+        checkbutton.textContent = me.bet === game.state.highestbet ? "Check" : `Call $${game.state.highestbet - me.bet}`;
       }
 
       if (me.balance + me.bet <= game.state.highestbet) {
