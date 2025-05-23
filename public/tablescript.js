@@ -230,8 +230,6 @@ function confirmWinner() {
   seatIds.forEach((id, index) => {
     const seatDiv = document.getElementById(id);
     seatDiv.classList.remove("selectable", "selected");
-    const newSeatDiv = seatDiv.cloneNode(true); // remove all listeners
-    seatDiv.parentNode.replaceChild(newSeatDiv, seatDiv);
   });
 
   document.getElementById("confirmWinnerContainer").classList.add("hidden");
