@@ -143,7 +143,7 @@ function checkStartNextRound(game, currentPlayer, code) {
 
   let lastToCallPlayer = null;
 
-  if (activePlayers.length === 0) {
+  if (activePlayers.length <= 1) {
     io.to(code).emit("players_update", game);
     return handleShowdown(game, code);
   }
