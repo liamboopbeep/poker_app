@@ -38,7 +38,6 @@ function resetGame(code) {
   }
   const nextDealerIndex = (currentDealerIndex + 1) % game.players.length;
 
-  setTimeout(() => {
     game.players.forEach((player) => {
       player.hand = [];
       player.bet = 0;
@@ -62,7 +61,6 @@ function resetGame(code) {
 
     game.players[nextDealerIndex].isDealer = true;
     io.to(code).emit("players_update", game);
-  }, 2000);
 }
 
 function dealHands(game) {
