@@ -12,7 +12,7 @@ const CHIP_VALUES = [
 ];
 
 let currentGameCode = null;
-let lastPhase = null;
+let lastPhase = "preflop";
 
 window.addEventListener("load", () => {
   const urlParams = new URLSearchParams(window.location.search);
@@ -103,8 +103,20 @@ function renderChips(container, amount) {
   }
 }
 
-function createGame() {
-  socket.emit("create_game", (code) => {
+function changetext() {
+  const checkbox = document.getElementById("myCheck");
+  const label = document.getElementById("checkbox-label");
+  if (checkbox.checked) {
+    label.textContent = "Using Physical Deck";
+    return;
+  }
+  label.textContent = "Using Virtual Deck";
+}
+
+function confirmGame() {
+  const checkbox = document.getElementById("myCheck");
+  socket.emit("create_game", checkbox.checked, (code) => {
+    document.getElementById("overlay").classList.add("hidden");
     document.getElementById("gameCode").innerText = "Game Code: " + code;
     document.getElementById("joinLink").href = `/player.html?code=${code}`;
     currentGameCode = code;
@@ -125,6 +137,11 @@ function createGame() {
       });
     });
   });
+}
+
+function createGame() {
+  const overlay = document.getElementById("overlay");
+  overlay.classList.remove("hidden");
 }
 
 function startGame() {
@@ -161,6 +178,46 @@ function showEventBanner(text) {
     banner.style.animation = "";
     textSpan.style.animation = "";
   }, 3200);
+}
+
+let selectedSeats = new Set();
+
+socket.on("choose_winner", (data) => {
+  selectedSeats.clear();
+  seatIds.forEach((seatId) => {
+    const seatDiv = document.getElementById(seatId);
+    seatDiv.classList.add("selectable");
+    seatDiv.addEventListener("click", onSeatClick);
+  });
+  document.getElementById("confirmWinnerContainer").classList.remove("hidden");
+});
+
+function onSeatClick(event) {
+  const seat = event.currentTarget;
+
+  if (seat.classList.contains("selected")) {
+    seat.classList.remove("selected");
+    selectedSeats.delete(seat.id);
+  } else {
+    seat.classList.add("selected");
+    selectedSeats.add(seat.id);
+  }
+}
+
+function confirmWinner() {
+  const winners = Array.from(selectedSeats);
+
+  socket.emit("winner_confirmed", { winners });
+
+  // Reset styles and state
+  seats.forEach((seatId) => {
+    const seat = document.getElementById(seatId);
+    seat.classList.remove("selectable", "selected");
+    seat.removeEventListener("click", onSeatClick);
+  });
+
+  document.getElementById("confirmWinnerContainer").classList.add("hidden");
+  selectedSeats.clear();
 }
 
 socket.on("winner_update", (data) => {

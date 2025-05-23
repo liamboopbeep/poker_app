@@ -78,31 +78,35 @@ function getNextPhase(current) {
 }
 
 function handleShowdown(game, code) {
-  const playerHands = [];
+  if (game.PhysicalDeck) {
+    io.to(code).emit("choose_winner");
+  } else {
+    const playerHands = [];
 
-  game.players.forEach((player) => {
-    if (!player.folded && player.hand && player.hand.length === 2) {
-      const fullHand = [...player.hand, ...game.state.community_card];
-      const solvedHand = Hand.solve(fullHand);
-      solvedHand.playerId = player.id;
-      playerHands.push(solvedHand);
-    }
-  });
-  const winners = Hand.winners(playerHands);
-
-  // Split pot among winners
-  const potAmount = game.pots[0].amount; //.reduce((sum, pot) => sum + pot.amount, 0);
-  const splitAmount = Math.floor(potAmount / winners.length);
-
-  winners.forEach((winnerHand) => {
-    const winnerPlayer = game.players.find((p) => p.id === winnerHand.playerId);
-    winnerPlayer.balance += splitAmount;
-    io.to(code).emit("winner_update", {
-      name: winnerPlayer.name,
-      description: winnerHand.descr,
+    game.players.forEach((player) => {
+      if (!player.folded && player.hand && player.hand.length === 2) {
+        const fullHand = [...player.hand, ...game.state.community_card];
+        const solvedHand = Hand.solve(fullHand);
+        solvedHand.playerId = player.id;
+        playerHands.push(solvedHand);
+      }
     });
-  });
-  resetGame(game, code);
+    const winners = Hand.winners(playerHands);
+
+    // Split pot among winners
+    const potAmount = game.pots[0].amount; //.reduce((sum, pot) => sum + pot.amount, 0);
+    const splitAmount = Math.floor(potAmount / winners.length);
+
+    winners.forEach((winnerHand) => {
+      const winnerPlayer = game.players.find((p) => p.id === winnerHand.playerId);
+      winnerPlayer.balance += splitAmount;
+      io.to(code).emit("winner_update", {
+        name: winnerPlayer.name,
+        description: winnerHand.descr,
+      });
+    });
+    resetGame(game, code);
+  }
 }
 
 function checkStartNextRound(game, currentPlayer, code) {
@@ -138,18 +142,22 @@ function checkStartNextRound(game, currentPlayer, code) {
 
     game.state.highestbet = 0;
 
-    switch (game.state.phase) {
-      case "preflop":
-        game.state.community_card = [game.deck.pop(), game.deck.pop(), game.deck.pop()];
-        break;
-      case "flop":
-        game.state.community_card.push(game.deck.pop());
-        break;
-      case "turn":
-        game.state.community_card.push(game.deck.pop());
-        break;
-      case "river":
-        return handleShowdown(game, code);
+    if (!game.PhysicalDeck) {
+      switch (game.state.phase) {
+        case "preflop":
+          game.state.community_card = [game.deck.pop(), game.deck.pop(), game.deck.pop()];
+          break;
+        case "flop":
+          game.state.community_card.push(game.deck.pop());
+          break;
+        case "turn":
+          game.state.community_card.push(game.deck.pop());
+          break;
+        case "river":
+          return handleShowdown(game, code);
+      }
+    } else if (game.state.phase == "river") {
+      return handleShowdown(game, code);
     }
     game.state.phase = getNextPhase(game.state.phase);
     // Determine the first active player to the left of the dealer
@@ -239,15 +247,16 @@ io.on("connection", (socket) => {
     callback({ success: true, message: "Rejoined successfully" });
   });
 
-  socket.on("create_game", (callback) => {
+  socket.on("create_game", (bVirtual, callback) => {
     const code = Math.random().toString(36).substring(2, 7).toUpperCase();
     games[code] = {
       players: [],
       deck: [],
       pots: [],
+      PhysicalDeck: bVirtual,
       state: { phase: "preflop", highestbet: 0, minraise: 1, lastRaiserId: "", community_card: [] },
     };
-    console.log("All current games:", Object.keys(games));
+    console.log(`Game ${code} created with physical deck: ${bVirtual}`);
     socket.join(code);
     callback(code);
   });
@@ -306,8 +315,9 @@ io.on("connection", (socket) => {
     const game = games[code];
     if (game && game.players.length >= 2) {
       console.log("game start!");
-      dealHands(game);
-
+      if (!game.PhysicalDeck) {
+        dealHands(game);
+      }
       const existingDealerIndex = game.players.findIndex((p) => p.isDealer);
       const dealerIndex = existingDealerIndex !== -1 ? existingDealerIndex : 0;
       const dealer = game.players[dealerIndex];

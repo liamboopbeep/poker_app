@@ -5,11 +5,16 @@
 </head>
 <body>
   <h1>Poker Table</h1>
-  <label>
-    <input type="checkbox" id="physicalDeckToggle" onchange="toggleDeckMode()">
-    Use Physical Deck
-  </label>
 
+  <div id="overlay" class="overlay hidden">
+    <div class="modal">
+      <div class="inlinerow">
+        <input type="checkbox" id="myCheck" onclick="changetext()"></input>
+        <label id="checkbox-label">Using Virtual Deck</label>
+        <button onclick="confirmGame()">Confirm</button>
+      </div>
+    </div>
+  </div>
   <div id="buttonRow">
     <button onclick="createGame()">Generate Game Code</button>
     <button onclick="startGame()">Start Game</button>
@@ -71,6 +76,9 @@
       </div>
       <div id="potDisplay"></div>
       <div id="community-cards" class="card-row"></div>
+      <div id="confirmWinnerContainer" class="hidden">
+        <button id="confirmbutton" onclick="confirmWinner()">CONFIRM WINNER</button>
+      </div>
     </div>
 
     <div id="tableedge"></div>
