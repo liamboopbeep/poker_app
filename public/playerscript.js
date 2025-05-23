@@ -144,6 +144,7 @@ function syncRaiseSlider() {
 
   let value = parseInt(input.value);
   slider.value = value;
+  console.log(amountToCall);
   total.textContent = `$${amountToCall + value}`;
 
   if (value >= parseInt(slider.max)) {

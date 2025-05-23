@@ -130,7 +130,7 @@ button:hover {
 
 #confirmWinnerContainer {
   position: absolute;
-  bottom: 27%;
+  top: 32%;
   left: 50%;
   transform: translate(-50%, -50%);
 }
@@ -138,6 +138,7 @@ button:hover {
 #confirmbutton {
   background: linear-gradient(75deg, red, orange, yellow, green, blue, indigo, violet, red);
   text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+  margin-bottom: 5%;
 }
 
 .winner-banner {
