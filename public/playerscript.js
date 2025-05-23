@@ -105,30 +105,62 @@ function debug() {
 
 function showRaiseControls() {
   const raiseControls = document.getElementById("raiseControls");
-  raiseControls.style.display = "block";
-  syncRaiseSlider();
-  syncRaiseInput();
+
+  if (raiseControls.style.display === "block") {
+    raiseControls.style.display = "none";
+  } else {
+    raiseControls.style.display = "block";
+    syncRaiseSlider();
+    syncRaiseInput();
+  }
 }
 
 function syncRaiseInput() {
   const slider = document.getElementById("raiseSlider");
   const input = document.getElementById("raiseInput");
   const total = document.querySelector("#raiseControls .total");
-  total.textContent = `$${parseInt(document.querySelector("#raiseControls .amount_to_call").textContent) + parseInt(slider.value)}`;
-  input.value = slider.value;
+  const amountToCall = parseInt(document.querySelector("#raiseControls .amount_to_call").textContent);
+  const raiseButton = document.querySelector("#raiseControls button");
+
+  let value = parseInt(slider.value);
+  input.value = value;
+  total.textContent = `$${amountToCall + value}`;
+
+  if (value >= parseInt(slider.max)) {
+    raiseButton.textContent = "All In";
+  } else {
+    raiseButton.textContent = "Confirm";
+  }
 }
 
 function syncRaiseSlider() {
   const slider = document.getElementById("raiseSlider");
   const input = document.getElementById("raiseInput");
   const total = document.querySelector("#raiseControls .total");
-  total.textContent = `$${parseInt(document.querySelector("#raiseControls .amount_to_call").textContent) + parseInt(input.value)}`;
-  slider.value = input.value;
+  const amountToCall = parseInt(document.querySelector("#raiseControls .amount_to_call").textContent);
+  const raiseButton = document.querySelector("#raiseControls button");
+
+  let value = parseInt(input.value);
+  slider.value = value;
+  total.textContent = `$${amountToCall + value}`;
+
+  if (value >= parseInt(slider.max)) {
+    raiseButton.textContent = "All In";
+  } else {
+    raiseButton.textContent = "Confirm";
+  }
 }
 
 function sendRaise() {
   const code = document.getElementById("code").value.toUpperCase();
   const raiseAmount = parseInt(document.getElementById("raiseInput").value);
-  socket.emit("player_raise", code, raiseAmount);
+  const max = parseInt(document.getElementById("raiseInput").max);
+
+  if (raiseAmount >= max) {
+    socket.emit("player_AllIn", code);
+  } else {
+    socket.emit("player_raise", code, raiseAmount);
+  }
+
   document.getElementById("raiseControls").style.display = "none";
 }

@@ -19,11 +19,11 @@
         <button onclick="sendAllIn()" class="allin" style="display: none;">All-In</button>
 
         <div id="raiseControls" style="display: none; margin-top: 20px">
-          <input type="range" id="raiseSlider" min="0" max="1000" step="1" oninput="syncRaiseInput()" />
+          <input type="range" id="raiseSlider" min="0" max="1000" step="1" style="width: 75%"oninput="syncRaiseInput()" />
           <input type="number" id="raiseInput" min="0" step="1" oninput="syncRaiseSlider()" />
           <div class="amount_to_call"></div>
           <div class="total"></div>
-          <button onclick="sendRaise()">Confirm Raise</button>
+          <button class="conraise" onclick="sendRaise()">Confirm Raise</button>
       </div>
       <!-- <button onclick="debug()" class="debug">debug</button> -->
       <div id="handBox" class="hand-box" style="display: none">

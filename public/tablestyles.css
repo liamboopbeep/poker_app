@@ -186,7 +186,7 @@ button:hover {
 
 #potDisplay {
   position: absolute;
-  bottom: 35%;
+  bottom: 30%;
   left: 50%;
   transform: translate(-50%, -50%);
   background-color: #222;
@@ -195,7 +195,7 @@ button:hover {
   border-radius: 10px;
   font-size: 24px;
   font-weight: bold;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
   z-index: 2;
 }
 
