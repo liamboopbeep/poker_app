@@ -73,7 +73,7 @@ function renderChips(container, amount) {
           img.src = `/img/${chip.img}`;
           img.alt = chip.value;
           img.style.position = "absolute";
-          img.style.top = `-${j * 5}px`; // 2px visible spacing
+          img.style.top = `-${j * 5}px`; // 5px visible spacing
           img.style.zIndex = j + 1;
           img.style.width = "32px";
           img.style.height = "30px";
@@ -182,38 +182,56 @@ function showEventBanner(text) {
 
 let selectedSeats = new Set();
 
-socket.on("choose_winner", (data) => {
+socket.on("choose_winner", (pot) => {
   selectedSeats.clear();
-  seatIds.forEach((seatId) => {
-    const seatDiv = document.getElementById(seatId);
+  seatIds.forEach((id, index) => {
+    const seatDiv = document.getElementById(id);
     seatDiv.classList.add("selectable");
-    seatDiv.addEventListener("click", onSeatClick);
+    seatDiv.addEventListener("click", () => onSeatClick(index, seatDiv));
   });
+
+  const slider = document.getElementById("winnerSlider");
+  const amountInput = document.getElementById("winnerAmount");
+
+  slider.max = pot;
+  slider.value = pot;
+  amountInput.max = pot;
+  amountInput.value = pot;
+
+  slider.oninput = () => (amountInput.value = slider.value);
+  amountInput.oninput = () => {
+    if (+amountInput.value > +slider.max) amountInput.value = slider.max;
+    slider.value = amountInput.value;
+  };
+
   document.getElementById("confirmWinnerContainer").classList.remove("hidden");
 });
 
-function onSeatClick(event) {
-  const seat = event.currentTarget;
-
-  if (seat.classList.contains("selected")) {
-    seat.classList.remove("selected");
-    selectedSeats.delete(seat.id);
+function onSeatClick(index, seatDiv) {
+  if (seatDiv.classList.contains("selected")) {
+    seatDiv.classList.remove("selected");
+    selectedSeats.delete(index);
   } else {
-    seat.classList.add("selected");
-    selectedSeats.add(seat.id);
+    seatDiv.classList.add("selected");
+    selectedSeats.add(index);
   }
 }
 
 function confirmWinner() {
   const winners = Array.from(selectedSeats);
+  const amount = parseInt(document.getElementById("winnerAmount").value, 10);
+  console.log(amount);
 
-  socket.emit("winner_confirmed", { winners });
+  if (winners.length === 0 || amount <= 0) return;
+  const fullText = document.getElementById("gameCode").textContent;
+  const code = fullText.split(":")[1].trim();
+  socket.emit("winner_confirmed", { code, winners, amount });
 
-  // Reset styles and state
-  seats.forEach((seatId) => {
-    const seat = document.getElementById(seatId);
-    seat.classList.remove("selectable", "selected");
-    seat.removeEventListener("click", onSeatClick);
+  seatIds.forEach((id, index) => {
+    const seatDiv = document.getElementById(id);
+    seatDiv.classList.remove("selectable", "selected");
+    const newSeatDiv = seatDiv.cloneNode(true); // remove all listeners
+    seatDiv.parentNode.replaceChild(newSeatDiv, seatDiv);
   });
 
   document.getElementById("confirmWinnerContainer").classList.add("hidden");
@@ -245,7 +263,7 @@ socket.on("winner_update", (data) => {
 
 socket.on("players_update", (game) => {
   console.log(game.players);
-  const mainpot = game.pots?.[0]?.amount ?? 0;
+  const mainpot = game.pot;
 
   const table = document.getElementById("table");
   document.getElementById("potDisplay").textContent = `Pot: $${mainpot}`;

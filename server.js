@@ -45,9 +45,10 @@ function resetGame(game, code) {
       player.folded = false;
       player.hasActed = false;
       player.allIn = false;
+      player.whole_game_bet = 0;
     });
 
-    game.pots = [];
+    game.pot = 0;
     game.state = {
       phase: "preflop",
       highestbet: 0,
@@ -79,34 +80,58 @@ function getNextPhase(current) {
 
 function handleShowdown(game, code) {
   if (game.PhysicalDeck) {
-    io.to(code).emit("choose_winner");
-  } else {
-    const playerHands = [];
+    io.to(code).emit("choose_winner", game.pot);
+    return;
+  }
 
-    game.players.forEach((player) => {
-      if (!player.folded && player.hand && player.hand.length === 2) {
-        const fullHand = [...player.hand, ...game.state.community_card];
-        const solvedHand = Hand.solve(fullHand);
-        solvedHand.playerId = player.id;
-        playerHands.push(solvedHand);
-      }
+  // Get active players
+  const activePlayers = game.players.filter((p) => !p.folded && p.hand);
+
+  // Step 1: Sort players by their total bet to prepare for side pot creation
+  const sortedByBet = [...activePlayers].sort((a, b) => a.whole_game_bet - b.whole_game_bet);
+  let remainingPlayers = [...sortedByBet];
+  let sidePots = [];
+  let prevBet = 0;
+
+  while (remainingPlayers.length > 0) {
+    const currBet = remainingPlayers[0].whole_game_bet;
+    const potSize = (currBet - prevBet) * remainingPlayers.length;
+
+    sidePots.push({
+      amount: potSize,
+      contenders: [...remainingPlayers],
     });
-    const winners = Hand.winners(playerHands);
 
-    // Split pot among winners
-    const potAmount = game.pots[0].amount; //.reduce((sum, pot) => sum + pot.amount, 0);
-    const splitAmount = Math.floor(potAmount / winners.length);
+    prevBet = currBet;
+    remainingPlayers = remainingPlayers.filter((p) => p.whole_game_bet > currBet);
+  }
+
+  // Step 2: Solve all hands once
+  const solvedHands = activePlayers.map((player) => {
+    const fullHand = [...player.hand, ...game.state.community_card];
+    const solved = Hand.solve(fullHand);
+    solved.playerId = player.id;
+    return solved;
+  });
+
+  // Step 3: Determine winners for each pot
+  for (const pot of sidePots) {
+    const contenderIds = new Set(pot.contenders.map((p) => p.id));
+    const eligibleHands = solvedHands.filter((hand) => contenderIds.has(hand.playerId));
+    const winners = Hand.winners(eligibleHands);
+    const splitAmount = Math.floor(pot.amount / winners.length);
 
     winners.forEach((winnerHand) => {
-      const winnerPlayer = game.players.find((p) => p.id === winnerHand.playerId);
-      winnerPlayer.balance += splitAmount;
+      const winner = game.players.find((p) => p.id === winnerHand.playerId);
+      winner.balance += splitAmount;
       io.to(code).emit("winner_update", {
-        name: winnerPlayer.name,
+        name: winner.name,
         description: winnerHand.descr,
       });
     });
-    resetGame(game, code);
   }
+
+  resetGame(game, code);
 }
 
 function checkStartNextRound(game, currentPlayer, code) {
@@ -192,11 +217,14 @@ function send_bet(code, player, bet) {
   if (!game || !player || bet <= 0 || player.folded || player.balance < bet) return;
   player.balance -= bet;
   player.bet += bet;
-  game.pots[0].amount += bet;
+  player.whole_game_bet += bet;
+
+  game.pot += bet;
+
   if (player.bet > game.state.highestbet) {
     game.state.highestbet = player.bet;
   }
-  // Update players info
+
   io.to(code).emit("players_update", game);
 }
 
@@ -252,7 +280,7 @@ io.on("connection", (socket) => {
     games[code] = {
       players: [],
       deck: [],
-      pots: [],
+      pot: 0,
       PhysicalDeck: bVirtual,
       state: { phase: "preflop", highestbet: 0, minraise: 1, lastRaiserId: "", community_card: [] },
     };
@@ -294,6 +322,7 @@ io.on("connection", (socket) => {
       hand: [],
       balance: 1000,
       bet: 0,
+      whole_game_bet: 0,
       isDealer: false,
       isSmallBlind: false,
       isBigBlind: false,
@@ -330,13 +359,6 @@ io.on("connection", (socket) => {
         p.isTurn = false;
         p.folded = false;
       });
-
-      game.pots = [
-        {
-          amount: 0,
-          contenders: game.players.map((p) => p.id),
-        },
-      ];
 
       const totalPlayers = game.players.length;
 
@@ -418,10 +440,11 @@ io.on("connection", (socket) => {
     if (!game) return;
 
     const currentPlayer = game.players.find((p) => p.isTurn);
-    send_bet(code, currentPlayer, currentPlayer.balance);
+    if (!currentPlayer) return;
+    currentPlayer.hasActed = true;
     currentPlayer.allIn = true;
+    send_bet(code, currentPlayer, currentPlayer.balance);
     checkStartNextRound(game, currentPlayer, code);
-
     io.to(code).emit("players_update", game);
   });
 
@@ -489,6 +512,31 @@ io.on("connection", (socket) => {
     });
 
     resetGame(game, code);
+  });
+
+  socket.on("winner_confirmed", ({ code, winners, amount }) => {
+    const game = games[code];
+    console.log(code);
+    console.log(amount);
+    console.log(winners);
+    if (!game) return;
+    game.pot -= amount;
+    const splitAmount = Math.floor(amount / winners.length);
+
+    for (const index of winners) {
+      const player = game.players[index];
+      if (player) {
+        player.balance += splitAmount;
+      }
+    }
+
+    if (game.pot > 0) {
+      io.to(code).emit("choose_winner", game.pot); // Ask for next manual winner
+    } else {
+      resetGame(game, code);
+    }
+
+    io.to(code).emit("players_update", game);
   });
 });
 
