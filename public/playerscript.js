@@ -68,7 +68,7 @@ socket.on("players_update", (game) => {
       document.querySelector("#playerInfo .small-blind").hidden = !me.isSmallBlind;
       document.querySelector("#playerInfo .big-blind").hidden = !me.isBigBlind;
 
-      document.querySelector("#raiseControls .amount_to_call").textContent = game.state.highestbet - me.bet;
+      document.querySelector("#raiseControls .amount_to_call").textContent = `To Call: $${game.state.highestbet - me.bet}`;
 
       document.getElementById("raiseSlider").min = game.state.minraise;
       document.getElementById("raiseSlider").max = me.balance;

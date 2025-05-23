@@ -155,31 +155,25 @@ button.raise:hover {
 }
 
 input[type="range"] {
-  height: 8px; /* makes the track thicker */
-  -webkit-appearance: none; /* necessary for custom styling */
-  background: #00cec9;
-  border-radius: 5px;
-  outline: none;
+  height: 100%; /* makes the track thicker */
 }
 
-/* Webkit (Chrome, Safari, Edge) */
-input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  height: 24px;
-  width: 24px;
-  border-radius: 50%;
-  background: #ffffff;
-  border: 2px solid #00cec9;
-  cursor: pointer;
-  margin-top: -8px; /* aligns thumb vertically */
+.info-line {
+  display: flex;
+  gap: 20px; /* space between the elements */
+  justify-content: center; /* center them horizontally */
+  margin-top: 15px;
 }
 
-/* Firefox */
-input[type="range"]::-moz-range-thumb {
-  height: 24px;
-  width: 24px;
-  border-radius: 50%;
-  background: #ffffff;
-  border: 2px solid #00cec9;
-  cursor: pointer;
+.amount_to_call,
+.total {
+  font-size: 18px;
+  font-weight: bold;
+  color: #ffffff;
+  background-color: #333;
+  padding: 8px 12px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  min-width: 120px;
+  text-align: center;
 }
