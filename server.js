@@ -32,9 +32,6 @@ function createShuffledDeck() {
 
 function resetGame(game) {
   const currentDealerIndex = game.players.findIndex((p) => p.isDealer);
-  if (currentDealerIndex === -1){
-    return;
-  }
   const nextDealerIndex = (currentDealerIndex + 1) % game.players.length;
     game.players[nextDealerIndex].isDealer = true;
     io.to(code).emit("players_update", game);
@@ -324,9 +321,9 @@ io.on("connection", (socket) => {
 
   socket.on("start_game", (code) => {
     const game = games[code];
-    resetGame(game);
     if (game && game.players.length >= 2) {
       console.log("game start!");
+      resetGame(game);
       if (!game.PhysicalDeck) {
         dealHands(game);
       }
