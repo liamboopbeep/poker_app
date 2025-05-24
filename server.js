@@ -346,7 +346,7 @@ io.on("connection", (socket) => {
 
   socket.on("start_game", (code) => {
     const game = games[code];
-    resetGame(game);
+    //resetGame(game);
     if (game && game.players.length >= 2) {
       console.log("game start!");
       if (!game.PhysicalDeck) {
@@ -358,12 +358,23 @@ io.on("connection", (socket) => {
 
       // Clear previous roles
       game.state.phase = "preflop";
+      game.state = {
+      highestbet: 0,
+      minraise: 1,
+      lastRaiserId: "",
+      community_card: [],
+    };
       game.players.forEach((p) => {
         p.isDealer = false;
         p.isSmallBlind = false;
         p.isBigBlind = false;
         p.isTurn = false;
         p.folded = false;
+        p.hand = [];
+      p.bet = 0;
+      p.hasActed = false;
+      p.allIn = false;
+      p.whole_game_bet = 0;
       });
 
       const totalPlayers = game.players.length;
