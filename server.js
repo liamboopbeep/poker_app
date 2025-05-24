@@ -30,11 +30,7 @@ function createShuffledDeck() {
   return deck;
 }
 
-function resetGame(code) {
-  const game = games[code];
-  if (!game) {
-    return;
-    }
+function resetGame(game) {
   const currentDealerIndex = game.players.findIndex((p) => p.isDealer);
   if (currentDealerIndex === -1){
     currentDealerIndex = 0;
@@ -350,7 +346,7 @@ io.on("connection", (socket) => {
 
   socket.on("start_game", (code) => {
     const game = games[code];
-    resetGame(code);
+    resetGame(game);
     if (game && game.players.length >= 2) {
       console.log("game start!");
       if (!game.PhysicalDeck) {
