@@ -33,31 +33,9 @@ function createShuffledDeck() {
 function resetGame(game) {
   const currentDealerIndex = game.players.findIndex((p) => p.isDealer);
   if (currentDealerIndex === -1){
-    currentDealerIndex = 0;
+    return;
   }
   const nextDealerIndex = (currentDealerIndex + 1) % game.players.length;
-
-    game.players.forEach((player) => {
-      player.hand = [];
-      player.bet = 0;
-      player.isDealer = false;
-      player.isSmallBlind = false;
-      player.isBigBlind = false;
-      player.isTurn = false;
-      player.folded = false;
-      player.hasActed = false;
-      player.allIn = false;
-      player.whole_game_bet = 0;
-    });
-
-    game.pot = 0;
-    game.state = {
-      highestbet: 0,
-      minraise: 1,
-      lastRaiserId: "",
-      community_card: [],
-    };
-
     game.players[nextDealerIndex].isDealer = true;
     io.to(code).emit("players_update", game);
 }
@@ -346,7 +324,7 @@ io.on("connection", (socket) => {
 
   socket.on("start_game", (code) => {
     const game = games[code];
-    //resetGame(game);
+    resetGame(game);
     if (game && game.players.length >= 2) {
       console.log("game start!");
       if (!game.PhysicalDeck) {
