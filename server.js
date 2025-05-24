@@ -32,9 +32,12 @@ function createShuffledDeck() {
 
 function resetGame(code) {
   const game = games[code];
+  if (!game) {
+    return;
+    }
   const currentDealerIndex = game.players.findIndex((p) => p.isDealer);
   if (currentDealerIndex === -1){
-    return;
+    currentDealerIndex = 0;
   }
   const nextDealerIndex = (currentDealerIndex + 1) % game.players.length;
 
@@ -62,6 +65,7 @@ function resetGame(code) {
     game.players[nextDealerIndex].isDealer = true;
     io.to(code).emit("players_update", game);
 }
+
 
 function dealHands(game) {
   const deck = createShuffledDeck();
